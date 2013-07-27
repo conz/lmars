@@ -1,0 +1,10 @@
+# Gambas Project File 3.0
+Title=Linux Mars Core War Environment
+Startup=FMain
+Component=gb.pcre
+Component=gb.settings
+Component=gb.image
+Component=gb.qt4
+Component=gb.qt4.ext
+Component=gb.form
+

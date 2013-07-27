@@ -1,0 +1,6 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,125,67)
+  Text = ("Linux Mars Core War Environment")
+}
