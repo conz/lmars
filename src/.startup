@@ -2,12 +2,12 @@ FMain
 Linux Mars Core War Environment
 0
 0
+0.0.1
 
-
-gb.pcre
-gb.settings
 gb.image
 gb.qt4
-gb.qt4.ext
 gb.form
+gb.settings
+gb.pcre
+gb.qt4.ext
 

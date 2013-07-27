@@ -1,9 +1,62 @@
 ' Gambas class file
 
+Public Sub Resize_me()
+  
+  Dim x, y, PanelH As Integer
+  
+  'Use this routine to resize and reposition the widgets on the page
+  
+  x = FMain.width
+  y = FMain.height 
+  PanelH = Panel1.height + 10
+  
+  If x < 400 Then Return 'We set a lower limit for width
+  If y < 400 Then Return 'We set a lower limit for height
+  
+  ed1.width = 285
+  ed1.x = 10 ' Set the X position of the first editor
+  ed1.y = PanelH 'Set the Y position of the first editor
+  ed1.height = y - (PanelH + 20) 'Set the height of the first editor
+  
+  ed2.width = 285
+  ed2.X = x - (ed2.Width + 10) ' Set the X position of the second editor
+  ed2.y = PanelH 'Set the Y position of the second editor
+  ed2.height = y - (PanelH + 20) 'Set the height of the second editor
+ 
+  DrawingArea1.x = ed1.width + 20 
+  DrawingArea1.y = Panel1.height + 10 'Set the Y position of the core drawing area
+  DrawingArea1.width = FMain.width - (10 + ed1.width + 20 + ed2.width + 10)
+  DrawingArea1.height = y - (PanelH + 20) 'Set the height of the core drawing area
+   
+  'Expander1.width = FMain.width - 20
+  'Expander1.height = FMain.height - 50
+  
+End
+
 Public Sub _new()
 
 End
 
 Public Sub Form_Open()
+  
+  Resize_me
 
+End
+
+Public Sub tbQuit_Click()
+
+  Quit
+
+End
+
+Public Sub tbStop_Click()
+
+  
+
+End
+
+Public Sub Form_Resize()
+  
+  Resize_me
+  
 End

@@ -1,6 +1,78 @@
 # Gambas Form File 3.0
 
-{ FMain Form
-  MoveScaled(0,0,50,50)
+{ Form Form
+  MoveScaled(0,0,136,67)
+  Text = ("Linux Mars Core War Environment")
+  { Panel1 Panel
+    MoveScaled(1,0,134,7)
+    { tbOpen1 ToolButton
+      MoveScaled(1,2,12,4)
+      Text = ("Open 1")
+      Picture = Picture["icon:/32/add"]
+    }
+    { tbOpen2 ToolButton
+      MoveScaled(89,2,12,4)
+      Text = ("Open 2")
+      Picture = Picture["icon:/32/add"]
+    }
+    { tbQuit ToolButton
+      MoveScaled(122,2,10,4)
+      Text = ("Quit")
+      Picture = Picture["icon:/32/quit"]
+    }
+    { tbRun ToolButton
+      MoveScaled(37,2,10,4)
+      Text = ("Run")
+      Picture = Picture["icon:/32/play"]
+    }
+    { tbPause ToolButton
+      MoveScaled(48,2,11,4)
+      Text = ("Pause")
+      Picture = Picture["icon:/32/pause"]
+    }
+    { tbStep ToolButton
+      MoveScaled(60,2,10,4)
+      Text = ("Step")
+      Picture = Picture["icon:/32/forward"]
+    }
+    { tbStop ToolButton
+      MoveScaled(72,2,10,4)
+      Text = ("Run")
+      Picture = Picture["icon:/32/stop"]
+    }
+    { tbSave1 ToolButton
+      MoveScaled(15,2,12,4)
+      Text = ("Save 1")
+      Picture = Picture["icon:/32/save"]
+    }
+    { tbSave2 ToolButton
+      MoveScaled(103,2,12,4)
+      Text = ("Save 1")
+      Picture = Picture["icon:/32/save"]
+    }
+    { Separator1 Separator
+      MoveScaled(29,1,3,6)
+    }
+    { Separator2 Separator
+      MoveScaled(84,1,3,6)
+    }
+    { Separator3 Separator
+      MoveScaled(110,1,3,5)
+    }
+    { Separator4 Separator
+      MoveScaled(118,1,3,6)
+    }
+  }
+  { ed1 Editor
+    MoveScaled(2,23,31,58)
+    Highlight = Highlight.Custom
+  }
+  { DrawingArea1 DrawingArea
+    MoveScaled(34,23,50,58)
+    Border = Border.Raised
+  }
+  { ed2 Editor
+    MoveScaled(86,23,41,58)
+    Highlight = Highlight.Custom
+  }
 }
-
