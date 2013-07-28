@@ -1,5 +1,9 @@
 ' Gambas class file
 
+' instantiate the core
+Public core_array As Core
+
+
 Public Sub Resize_me()
   
   Dim x, y, PanelH As Integer
