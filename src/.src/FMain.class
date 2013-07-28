@@ -1,7 +1,98 @@
 ' Gambas class file
 
-' instantiate the core
-Public core_array As Core
+'this class provides the Core memory object factory
+'Public core_memory[8000] As String 'stores the instruction code for each cell
+Public core_memory As New String[8000] 'stores the instruction code for each cell
+Public core_cell_colour As New Integer[8000] 'stores the colour of the last process which changed this cell
+'Public core_cell_colour[8000] As Integer 'stores the colour of the last process which changed this cell
+'Public Const Warrior1 As Integer = Color.red 'Color.red
+
+
+Public Sub SetCellColour(cell As Integer, colour As Integer)
+  'Use this function to set each cell colour which has been written to by a process
+  
+  
+End
+
+Public Sub GetCellColour(cell As Integer, colour As Integer)
+  'Use this function to get the cell colour for a particular cell
+ 
+  
+  
+End
+
+Public Sub SetCellContents(cell As Integer, value As String)
+  'Use this function to set the cell contents of a specific cell
+  
+  
+End
+
+Public Sub GetCellContents(cell As Integer, value As String)
+  'Use this function to get the cell contents of a specific cell
+  
+  
+End
+
+Public Sub ClearCore()
+  'Use this function to clear (or zero out) the contents of the entire core, to ensure that if another battle is run, it has a clean core
+  core_memory.clear 'wipes all the core contents
+  core_memory.Resize(8000)
+    
+  core_cell_colour.Clear
+  core_cell_colour.Resize(8000)
+End
+
+Public Sub LoadWarrior(load_point As Integer, code As String)
+  'given a starting point and the code as a string, will segment the code into lines
+  'and inject it into the core_memory array
+  Dim code_lines As String[]
+  Dim code_line As String
+  Dim i As Integer
+  
+  code_lines = Split(code, "\n")
+  For Each code_line In code_lines
+    core_memory[load_point + i] = code_line
+    i += 1
+  Next
+  DrawCore
+End
+
+  Public Sub DrawCore()
+  'paints the drawing area with the contents of the core memory
+  'use this var for our loop counter
+  Dim counter As Integer
+  'clear the drawing area
+  DrawingArea1.Clear
+  'make sure fill style is set to None
+  draw.FillStyle = fill.None
+  'set color to cyan
+  draw.Foreground = color.cyan
+  'this will make the cyan rectangle appear red
+  draw.Invert = True
+  For counter = 0 To 15 'loop 16 times
+    'draw a rect, inc the startx,y and end x,y positions 5* counter val
+    Draw.Rect(5 + 5 * counter, 5 + 5 * counter, DrawingArea1.W / 2 + 5 * counter, DrawingArea1.H / 2 + 5 * counter)
+    'if we hit an even number, invoke toggle Invert property on/off
+    If counter Mod 2 = 0 Then
+      draw.Invert = False
+    Else
+      draw.Invert = True
+    Endif
+  Next 'iteration of the loop
+  'ensure invert is set to off
+  draw.Invert = False
+  'set current fgd color to black
+  draw.Forecolor = color.Black
+  'set a point midscreen
+  draw.Point(DrawingArea1.W / 2, DrawingArea1.H / 2)
+  'now we will make a tiny crosshair from the first point by moving one pixel up, down, left and right of the center
+  'dot we set with the first draw.point call
+  draw.Point(DrawingArea1.W / 2 - 1, DrawingArea1.H / 2)
+  draw.Point(DrawingArea1.W / 2 + 1, DrawingArea1.H / 2)
+  draw.Point(DrawingArea1.W / 2, DrawingArea1.H / 2 - 1)
+  draw.Point(DrawingArea1.W / 2, DrawingArea1.H / 2 + 1)
+  
+End
 
 
 Public Sub Resize_me()
@@ -38,6 +129,11 @@ Public Sub Resize_me()
 End
 
 Public Sub _new()
+'Is called at the start of the program
+ClearCore
+'seed the random number generator for setting the start positions of the warriors
+Randomize
+
 
 End
 
@@ -63,4 +159,57 @@ Public Sub Form_Resize()
   
   Resize_me
   
+End
+
+Public Sub tbOpen1_Click()
+  'we need to provide the user with a file open dialog box so they can select a redcode warrior
+  Dialog.Title = "Choose a Redcode Warrior file"
+  Dialog.Title = "Choose a file"
+  Dialog.Filter = ["*.red", "Redcode Files", "*", "All files"]
+  Dialog.Path = "."
+  If Dialog.OpenFile() Then
+    Return ' User pressed Cancel -
+  Endif
+  ed1.Text = File.Load(Dialog.Path)
+Catch
+  Message.Info("Error opening file\n\n" & Error.Text)
+
+End
+
+Public Sub tbOpen2_Click()
+  'we need to provide the user with a file open dialog box so they can select a redcode warrior
+  Dialog.Title = "Choose a Redcode Warrior file"
+  Dialog.Title = "Choose a file"
+  Dialog.Filter = ["*.red", "Redcode Files", "*", "All files"]
+  Dialog.Path = "."
+  If Dialog.OpenFile() Then
+    Return ' User pressed Cancel -
+  Endif
+  ed2.Text = File.Load(Dialog.Path)
+Catch
+  Message.Info("Error opening file\n\n" & Error.Text)
+
+End
+
+Public Sub tbRun_Click()
+'copy the contents of the two warrior editors into the core array
+Dim start_position As Integer
+'select the random position of warrior 1
+start_position = Int(Rnd(1, 7800))
+'Message(Str$(start_position))
+LoadWarrior(start_position, ed1.text)
+
+'select the random position of warrior 2
+start_position = Int(Rnd(1, 7800))
+'Message(Str$(start_position))
+LoadWarrior(start_position, ed2.text)
+
+
+End
+
+Public Sub draw_Draw()
+
+  DrawCore
+  
+
 End

@@ -64,15 +64,15 @@
     }
   }
   { ed1 Editor
-    MoveScaled(2,23,31,58)
+    MoveScaled(3,9,31,58)
     Highlight = Highlight.Custom
   }
   { DrawingArea1 DrawingArea
-    MoveScaled(34,23,50,58)
+    MoveScaled(35,9,50,58)
     Border = Border.Raised
   }
   { ed2 Editor
-    MoveScaled(86,23,41,58)
+    MoveScaled(87,9,41,58)
     Highlight = Highlight.Custom
   }
 }
