@@ -50,18 +50,17 @@ Public Sub ClearCore()
   core_cell_colour.Resize(max_core_size)
 End
 
-Public Sub LoadWarrior(load_point As Integer, code As String)
+Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As Integer)
   'given a starting point and the code as a string, will segment the code into lines
   'and inject it into the core_memory array
   Dim code_lines As String[]
   Dim code_line As String
   Dim i As Integer
   
-  
-  
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
     core_memory[load_point + i] = code_line
+    core_cell_colour[load_point + i] = warrior_colour
     'DrawWarriorCell(load_point + i)
     i += 1
   Next
@@ -70,7 +69,7 @@ Public Sub LoadWarrior(load_point As Integer, code As String)
   
 End
 
-  Public Sub DrawCore()
+Public Sub DrawCore()
   ' 'paints the drawing area with the contents of the core memory
   ' 'use this var for our loop counter
   Dim counter As Integer
@@ -101,25 +100,38 @@ End
   grid_cells_y = j 'Set the number of grid cells in the vertical length
   
   'we now paint in the programs as they appear in the core array
-  Draw.FillStyle = Fill.Dense6
-  Draw.Foreground = Color.Blue
+  Draw.FillStyle = Fill.Solid
   
   For i = 1 To vertical_lines + 1
      For j = 1 To horizontal_lines + 1
       cursor_pos = i + j * vertical_lines
       If (cursor_pos > 0) And (cursor_pos < max_core_size) Then
         If core_memory[cursor_pos] <> "" Then
-          Draw.Rect(stepx * i, stepy * j, stepx * (i + 1), stepy * (j + 1))
+          Draw.Foreground = core_cell_colour[cursor_pos]
+          Draw.Rect(stepx * i, stepy * j, stepx, stepy)
         Endif
       Endif     
      Next
-  Next  
-  
+  Next    
   
   Draw.End
   
 End
 
+Public Sub ToolBarRunMode(run_mode As Boolean)
+  'switches on or off most of the toolbar buttons
+  
+  tbPause.enabled = run_mode
+  tbStop.enabled = run_mode
+  tbStep.enabled = run_mode
+  tbOpen1.enabled = Not run_mode
+  tbSave1.enabled = Not run_mode
+  tbOpen2.enabled = Not run_mode
+  tbSave2.Enabled = Not run_mode
+  tbRun.enabled = Not run_mode
+  
+  
+End
 
 
 Public Sub Resize_me()
@@ -160,6 +172,7 @@ Public Sub PeekCore()
   Dim x, y As Integer
   Dim stepx, stepy As Integer
   Dim cursor_pos As Integer
+  Dim core_cell_contents As String
   
   'given an x and y position on the drawing area, can we determine which cell that falls into?
   stepx = DrawingArea1.Width / vertical_lines
@@ -168,8 +181,11 @@ Public Sub PeekCore()
   x = Mouse.x / stepx + 1
   y = Mouse.y / stepy
   cursor_pos = x + y * vertical_lines
+  
   If (cursor_pos > 0) And (cursor_pos <= max_core_size) Then
-    DrawingArea1.tooltip = "Memory Address: " & Str$(cursor_pos) & core_memory[cursor_pos]
+    core_cell_contents = core_memory[cursor_pos]
+    If core_cell_contents = "" Then core_cell_contents = "Dat #0, #0" Else core_cell_contents = core_memory[cursor_pos]
+    DrawingArea1.tooltip = "Memory Address: " & Str$(cursor_pos) & " :: " & core_cell_contents
   End If
   
 End
@@ -185,7 +201,7 @@ Public Sub OpenWarrior(warrior As Integer)
   Endif
   If warrior = 1 Then
     ed1.Text = File.Load(Dialog.Path)
-      Settings["warrior1"] = Dialog.Path
+    Settings["warrior1"] = Dialog.Path
   Else
     ed2.Text = File.Load(Dialog.Path)
     Settings["warrior2"] = Dialog.Path
@@ -212,7 +228,8 @@ End
 
 Public Sub _new()
 'Is called at the start of the program
-ClearCore
+ToolBarRunMode(False)
+
 'seed the random number generator for setting the start positions of the warriors
 Randomize
 
@@ -234,6 +251,7 @@ End
 
 Public Sub tbStop_Click()
 
+  ToolBarRunMode(False)
   
 
 End
@@ -257,15 +275,27 @@ End
 Public Sub tbRun_Click()
 'copy the contents of the two warrior editors into the core array
 Dim start_position As Integer
+
+'we need to check to see if we're in a paused state; if so, we re-enable the timer, and exit this function
+If tbPause.enabled = True Then
+  Timer1.Enabled = True
+  ToolBarRunMode(True)
+  Return
+Endif
+
+ClearCore
+ToolBarRunMode(True)
+
 'select the random position of warrior 1
 start_position = Int(Rnd(1, 7800))
+
 'Message(Str$(start_position))
-LoadWarrior(start_position, ed1.text)
+LoadWarrior(start_position, ed1.text, Color.Green)
 
 'select the random position of warrior 2
 start_position = Int(Rnd(1, 7800))
 'Message(Str$(start_position))
-LoadWarrior(start_position, ed2.text)
+LoadWarrior(start_position, ed2.text, Color.Magenta)
 
 Timer1.Enabled = True
 
@@ -310,5 +340,11 @@ End
 Public Sub Form_MouseMove()
 
   DrawingArea1.mouse = Mouse.Default
+
+End
+
+Public Sub tbPause_Click()
+
+  tbRun.enabled = True
 
 End
