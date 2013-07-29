@@ -37,7 +37,7 @@
     }
     { tbStop ToolButton
       MoveScaled(72,2,10,4)
-      Text = ("Run")
+      Text = ("Stop")
       Picture = Picture["icon:/32/stop"]
     }
     { tbSave1 ToolButton
@@ -65,15 +65,18 @@
   }
   { ed1 Editor
     MoveScaled(3,9,31,58)
+    Font = Font["9"]
     Highlight = Highlight.Custom
   }
   { DrawingArea1 DrawingArea
     MoveScaled(35,9,50,58)
+    Tracking = True
     Border = Border.Raised
     Cached = True
   }
   { ed2 Editor
     MoveScaled(87,9,41,58)
+    Font = Font["9"]
     Highlight = Highlight.Custom
   }
   { Timer1 #Timer

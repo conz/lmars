@@ -76,13 +76,13 @@ End
   y1 = 0
   x2 = DrawingArea1.Width
   y2 = DrawingArea1.Height
-  stepx = (x2 - x1) / vertical_lines
-  stepy = (y2 - y1) / horizontal_lines
+  stepx = (x2 - x1) / vertical_lines + 1
+  stepy = (y2 - y1) / horizontal_lines + 1
   
   For i = 1 To vertical_lines + 1
     Draw.Line(x1 + i * stepx, y1, x1 + i * stepx, y2)      
   Next
-  For j = 1 To horizontal_lines + 3
+  For j = 1 To horizontal_lines + 1
     Draw.Line(x1, y1 + (j * stepy), x2, y1 + (j * stepy))        
   Next
 
@@ -121,8 +121,51 @@ Public Sub Resize_me()
    
   'Expander1.width = FMain.width - 20
   'Expander1.height = FMain.height - 50
+  DrawCore
+End
+
+Public Sub PeekCore()
+  'Will determin where the mouse-over correlates to the memory core, and provide that addresse's contents as a pop-up balloon item
+  DrawingArea1.tooltip = "Mov 0 1"
+  
   
 End
+
+Public Sub OpenWarrior(warrior As Integer)
+    'we need to provide the user with a file open dialog box so they can select a redcode warrior
+  Dialog.Title = "Choose a Redcode Warrior file"
+  Dialog.Title = "Choose a file"
+  Dialog.Filter = ["*.red", "Redcode Files", "*", "All files"]
+  Dialog.Path = "."
+  If Dialog.OpenFile() Then
+    Return ' User pressed Cancel -
+  Endif
+  If warrior = 1 Then
+    ed1.Text = File.Load(Dialog.Path)
+      Settings["warrior1"] = Dialog.Path
+  Else
+    ed2.Text = File.Load(Dialog.Path)
+    Settings["warrior2"] = Dialog.Path
+  Endif
+  
+Catch
+  Message.Info("Error opening file\n\n" & Error.Text)
+  
+End
+
+Public Sub Preload_Warriors()
+  'preload the warriors last used
+  ed1.text = File.Load(Settings["warrior1", "/home/conz/Documents/development/gambas/lmars/warriors/imp.red"])
+  ed2.text = File.Load(Settings["warrior2", "/home/conz/Documents/development/gambas/lmars/warriors/dwarf.red"])
+  
+End
+
+Public Sub Processing()
+  
+  
+  
+End
+
 
 Public Sub _new()
 'Is called at the start of the program
@@ -136,6 +179,7 @@ End
 Public Sub Form_Open()
   
   Resize_me
+  Preload_Warriors
 
 End
 
@@ -158,32 +202,12 @@ Public Sub Form_Resize()
 End
 
 Public Sub tbOpen1_Click()
-  'we need to provide the user with a file open dialog box so they can select a redcode warrior
-  Dialog.Title = "Choose a Redcode Warrior file"
-  Dialog.Title = "Choose a file"
-  Dialog.Filter = ["*.red", "Redcode Files", "*", "All files"]
-  Dialog.Path = "."
-  If Dialog.OpenFile() Then
-    Return ' User pressed Cancel -
-  Endif
-  ed1.Text = File.Load(Dialog.Path)
-Catch
-  Message.Info("Error opening file\n\n" & Error.Text)
-
+  OpenWarrior(1)
+  
 End
 
 Public Sub tbOpen2_Click()
-  'we need to provide the user with a file open dialog box so they can select a redcode warrior
-  Dialog.Title = "Choose a Redcode Warrior file"
-  Dialog.Title = "Choose a file"
-  Dialog.Filter = ["*.red", "Redcode Files", "*", "All files"]
-  Dialog.Path = "."
-  If Dialog.OpenFile() Then
-    Return ' User pressed Cancel -
-  Endif
-  ed2.Text = File.Load(Dialog.Path)
-Catch
-  Message.Info("Error opening file\n\n" & Error.Text)
+  OpenWarrior(2)
 
 End
 
@@ -219,4 +243,29 @@ Public Sub Timer1_Timer()
   DrawCore
   Timer1.enabled = True
   
+End
+
+Public Sub DrawingArea1_Draw()
+
+  
+
+End
+
+Public Sub DrawingArea1_MouseMove()
+
+  DrawingArea1.Mouse = Mouse.Cross
+  PeekCore
+
+End
+
+Public Sub DrawingArea1_MouseDown()
+
+  PeekCore
+
+End
+
+Public Sub Form_MouseMove()
+
+  DrawingArea1.mouse = Mouse.Default
+
 End
