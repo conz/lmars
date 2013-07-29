@@ -9,6 +9,12 @@ Public core_cell_colour As New Integer[8000] 'stores the colour of the last proc
 
 Public Const vertical_lines As Integer = 88
 Public Const horizontal_lines As Integer = 91
+Public Const max_core_size As Integer = 8000
+
+Public grid_cells_x As Integer
+Public grid_cells_y As Integer
+
+
 
 Public Sub SetCellColour(cell As Integer, colour As Integer)
   'Use this function to set each cell colour which has been written to by a process
@@ -38,10 +44,10 @@ End
 Public Sub ClearCore()
   'Use this function to clear (or zero out) the contents of the entire core, to ensure that if another battle is run, it has a clean core
   core_memory.clear 'wipes all the core contents
-  core_memory.Resize(8000)
+  core_memory.Resize(max_core_size)
     
   core_cell_colour.Clear
-  core_cell_colour.Resize(8000)
+  core_cell_colour.Resize(max_core_size)
 End
 
 Public Sub LoadWarrior(load_point As Integer, code As String)
@@ -51,12 +57,17 @@ Public Sub LoadWarrior(load_point As Integer, code As String)
   Dim code_line As String
   Dim i As Integer
   
+  
+  
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
     core_memory[load_point + i] = code_line
+    'DrawWarriorCell(load_point + i)
     i += 1
   Next
+  
   DrawCore
+  
 End
 
   Public Sub DrawCore()
@@ -66,7 +77,7 @@ End
   Dim i, j, k As Integer
   Dim x1, y1, x2, y2 As Integer
   Dim stepx, stepy As Integer
-
+  Dim cursor_pos As Integer
   
   Draw.Begin(DrawingArea1)
   Draw.Clear
@@ -81,14 +92,34 @@ End
   
   For i = 1 To vertical_lines + 1
     Draw.Line(x1 + i * stepx, y1, x1 + i * stepx, y2)      
-  Next
+  Next 
+  grid_cells_x = i 'Set the number of grid cells in the horizontal length
+  
   For j = 1 To horizontal_lines + 1
     Draw.Line(x1, y1 + (j * stepy), x2, y1 + (j * stepy))        
   Next
-
+  grid_cells_y = j 'Set the number of grid cells in the vertical length
+  
+  'we now paint in the programs as they appear in the core array
+  Draw.FillStyle = Fill.Dense6
+  Draw.Foreground = Color.Blue
+  
+  For i = 1 To vertical_lines + 1
+     For j = 1 To horizontal_lines + 1
+      cursor_pos = i + j * vertical_lines
+      If (cursor_pos > 0) And (cursor_pos < max_core_size) Then
+        If core_memory[cursor_pos] <> "" Then
+          Draw.Rect(stepx * i, stepy * j, stepx * (i + 1), stepy * (j + 1))
+        Endif
+      Endif     
+     Next
+  Next  
+  
+  
   Draw.End
   
 End
+
 
 
 Public Sub Resize_me()
@@ -126,8 +157,20 @@ End
 
 Public Sub PeekCore()
   'Will determin where the mouse-over correlates to the memory core, and provide that addresse's contents as a pop-up balloon item
-  DrawingArea1.tooltip = "Mov 0 1"
+  Dim x, y As Integer
+  Dim stepx, stepy As Integer
+  Dim cursor_pos As Integer
   
+  'given an x and y position on the drawing area, can we determine which cell that falls into?
+  stepx = DrawingArea1.Width / vertical_lines
+  stepy = DrawingArea1.Height / horizontal_lines
+  'the cell number maps into the core_memory as x*91 + 88
+  x = Mouse.x / stepx + 1
+  y = Mouse.y / stepy
+  cursor_pos = x + y * vertical_lines
+  If (cursor_pos > 0) And (cursor_pos <= max_core_size) Then
+    DrawingArea1.tooltip = "Memory Address: " & Str$(cursor_pos) & core_memory[cursor_pos]
+  End If
   
 End
 
