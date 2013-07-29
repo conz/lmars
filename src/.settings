@@ -7,16 +7,28 @@ Count=0
 [DebugWindow]
 Count=0
 
+[DebugWindow/core_memory]
+Geometry=[2,25,210,304]
+
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
+<<<<<<< HEAD
 File[2]=".src/FMain.class:111.13"
+=======
+File[2]=".src/FMain.class:203.4"
+>>>>>>> f1f0f9bed9d0a891e92c7646982532cb0afc3a55
 Count=2
 
 [Watches]
 Count=4
 Watch[1]="stepx * i"
 Watch[2]="stepy * j"
+<<<<<<< HEAD
 Watch[3]="(stepx + 1) * i"
 Watch[4]="(stepy + 1) * j"
+=======
+Watch[3]="stepx * (i + 1)"
+Watch[4]="stepy * (j + 1)"
+>>>>>>> f1f0f9bed9d0a891e92c7646982532cb0afc3a55
 
