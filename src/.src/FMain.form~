@@ -75,4 +75,7 @@
     MoveScaled(87,9,41,58)
     Highlight = Highlight.Custom
   }
+  { Timer1 #Timer
+    #MoveScaled(127,11)
+  }
 }

@@ -7,6 +7,8 @@ Public core_cell_colour As New Integer[8000] 'stores the colour of the last proc
 'Public core_cell_colour[8000] As Integer 'stores the colour of the last process which changed this cell
 'Public Const Warrior1 As Integer = Color.red 'Color.red
 
+Public Const vertical_lines As Integer = 88
+Public Const horizontal_lines As Integer = 91
 
 Public Sub SetCellColour(cell As Integer, colour As Integer)
   'Use this function to set each cell colour which has been written to by a process
@@ -58,39 +60,33 @@ Public Sub LoadWarrior(load_point As Integer, code As String)
 End
 
   Public Sub DrawCore()
-  'paints the drawing area with the contents of the core memory
-  'use this var for our loop counter
+  ' 'paints the drawing area with the contents of the core memory
+  ' 'use this var for our loop counter
   Dim counter As Integer
-  'clear the drawing area
-  DrawingArea1.Clear
-  'make sure fill style is set to None
-  draw.FillStyle = fill.None
-  'set color to cyan
-  draw.Foreground = color.cyan
-  'this will make the cyan rectangle appear red
-  draw.Invert = True
-  For counter = 0 To 15 'loop 16 times
-    'draw a rect, inc the startx,y and end x,y positions 5* counter val
-    Draw.Rect(5 + 5 * counter, 5 + 5 * counter, DrawingArea1.W / 2 + 5 * counter, DrawingArea1.H / 2 + 5 * counter)
-    'if we hit an even number, invoke toggle Invert property on/off
-    If counter Mod 2 = 0 Then
-      draw.Invert = False
-    Else
-      draw.Invert = True
-    Endif
-  Next 'iteration of the loop
-  'ensure invert is set to off
-  draw.Invert = False
-  'set current fgd color to black
-  draw.Forecolor = color.Black
-  'set a point midscreen
-  draw.Point(DrawingArea1.W / 2, DrawingArea1.H / 2)
-  'now we will make a tiny crosshair from the first point by moving one pixel up, down, left and right of the center
-  'dot we set with the first draw.point call
-  draw.Point(DrawingArea1.W / 2 - 1, DrawingArea1.H / 2)
-  draw.Point(DrawingArea1.W / 2 + 1, DrawingArea1.H / 2)
-  draw.Point(DrawingArea1.W / 2, DrawingArea1.H / 2 - 1)
-  draw.Point(DrawingArea1.W / 2, DrawingArea1.H / 2 + 1)
+  Dim i, j, k As Integer
+  Dim x1, y1, x2, y2 As Integer
+  Dim stepx, stepy As Integer
+
+  
+  Draw.Begin(DrawingArea1)
+  Draw.Clear
+  Draw.FillStyle = 1
+  Draw.Foreground = Color.Gray
+  x1 = 0
+  y1 = 0
+  x2 = DrawingArea1.Width
+  y2 = DrawingArea1.Height
+  stepx = (x2 - x1) / vertical_lines
+  stepy = (y2 - y1) / horizontal_lines
+  
+  For i = 1 To vertical_lines + 1
+    Draw.Line(x1 + i * stepx, y1, x1 + i * stepx, y2)      
+  Next
+  For j = 1 To horizontal_lines + 3
+    Draw.Line(x1, y1 + (j * stepy), x2, y1 + (j * stepy))        
+  Next
+
+  Draw.End
   
 End
 
@@ -204,12 +200,23 @@ start_position = Int(Rnd(1, 7800))
 'Message(Str$(start_position))
 LoadWarrior(start_position, ed2.text)
 
+Timer1.Enabled = True
 
 End
 
 Public Sub draw_Draw()
-
-  DrawCore
+ 
   
 
+End 
+
+Public Sub Timer1_Timer()
+
+  'DoGravity
+  'If togClear.Value Then dW.Clear()
+  Wait 0.001
+  Timer1.enabled = False
+  DrawCore
+  Timer1.enabled = True
+  
 End
