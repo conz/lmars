@@ -11,8 +11,54 @@ Public Const vertical_lines As Integer = 88
 Public Const horizontal_lines As Integer = 91
 Public Const max_core_size As Integer = 8000
 
+'Redcode assembly instruction codes:
+'As documented in "The beginners' guide to Redcode" by Ilmari Karonen.
+'
+' DAT -- data (kills the process)
+' MOV - - Move (copies data From one address To another)
+' ADD - - add(adds one number To another)
+' Sub - - subtract(subtracts one number From another)
+' MUL - - multiply(multiplies one number With another)
+' Div - - divide(divides one number With another)
+' Mod - - modulus(divides one number With another And gives the remainder)
+' JMP - - jump(continues execution From another address)
+' JMZ - - jump If zero(tests a number And jumps To an address If it 's 0)
+' JMN - - jump If Not zero(tests a number And jumps If it isn 't 0)
+' DJN - - decrement And jump If Not zero(decrements a number by one, And jumps unless the result Is 0)
+' SPL - - Split(starts a Second process at another address)
+' CMP - - compare(same As SEQ)
+' SEQ - - skip If equal(compares two instructions, And skips the Next instruction If they are equal)
+' SNE - - skip If Not equal(compares two instructions, And skips the Next instruction If they aren 't equal)
+' SLT - - skip If Lower than(compares two values, And skips the Next instruction If the first Is Lower than the Second)
+' LDP - - load From p - Space(loads a number From Private storage Space)
+' STP - - save To p - Space(saves a number To Private storage Space)
+' NOP - - no operation(does nothing)
+'
+Public Const I_DAT As String = "dat"
+Public Const I_MOV As String = "mov"
+Public Const I_ADD As String = "add"
+Public Const I_SUB As String = "sub"
+Public Const I_MUL As String = "mul"
+Public Const I_DIV As String = "div"
+Public Const I_MOD As String = "mod"
+Public Const I_JMP As String = "jmp"
+Public Const I_JMZ As String = "jmz"
+Public Const I_JMN As String = "jmn"
+Public Const I_DJN As String = "djn"
+Public Const I_SPL As String = "spl"
+Public Const I_CMP As String = "cmp"
+Public Const I_SEQ As String = "SEQ"
+Public Const I_SNE As String = "SNE"
+Public Const I_SLT As String = "slt"
+Public Const I_LDP As String = "ldp"
+Public Const I_STP As String = "stp"
+Public Const I_NOP As String = "NOP"
+
 Public grid_cells_x As Integer
 Public grid_cells_y As Integer
+
+
+
 
 
 
@@ -240,6 +286,7 @@ Public Sub Form_Open()
   
   Resize_me
   Preload_Warriors
+   
 
 End
 
@@ -346,5 +393,97 @@ End
 Public Sub tbPause_Click()
 
   tbRun.enabled = True
+
+End
+
+Public Sub ed1_Highlight()
+  'Highlight the new line
+  'Code below is inspired/copied from the demo which ships with Gambas (GPL)
+  'This code has not yet been tweaked to work with RedCode
+  '
+  Dim iState As Integer
+  Dim iNextState As Integer
+  Dim iInd As Integer
+  Dim J As Integer
+  Dim sText As String
+  Dim sCar As String
+  Dim iPos As Integer
+  Dim bMarkup As Boolean
+
+  iState = Highlight.State
+  sText = Highlight.Text
+
+  'PRINT "Highlight:";; iState;; sText
+
+  For iInd = 1 To String.Len(sText)
+
+    iNextState = iState
+    sCar = String.Mid$(sText, iInd, 1)
+
+    If bMarkup Then
+
+      If sCar = ">" Then
+        bMarkup = False
+        iState = Highlight.Keyword
+        iNextState = Highlight.Normal
+      Else If sCar = " " Then
+        iNextState = Highlight.Operator
+      Else If sCar = "=" Then
+        iNextState = Highlight.String
+      Endif
+
+    Else
+
+      Select Case iState
+        Case Highlight.Normal
+          If sCar = "<" Then
+            If String.Mid$(sText, iInd, 4) = "<!--" Then
+              iState = Highlight.Comment
+              iNextState = Highlight.Comment
+            Else
+              iState = Highlight.Keyword
+              iNextState = Highlight.Keyword
+              bMarkup = True
+            Endif
+          Else If sCar = "&" Then
+            iPos = String.InStr(sText, ";", iInd)
+            If iPos = 0 Or iPos = iInd + 1 Then
+              iState = Highlight.Error
+            Else
+              For J = iInd + 1 To iPos - 1
+                sCar = String.Mid$(sText, J, 1)
+                If IsLetter(sCar) Then Continue
+                If IsDigit(sCar) Then Continue
+                If InStr("_#", sCar) Then Continue
+                Break
+              Next
+              If J = iPos Then
+                Highlight.Add(Highlight.Number, iPos - iInd + 1)
+                iInd = iPos
+                Continue
+              Else
+                iState = Highlight.Error
+              Endif
+            Endif
+          Endif
+        Case Highlight.Comment
+          If sCar = ">" And If iInd > 2 And If String.Mid$(sText, iInd - 2, 2) = "--" Then
+            iNextState = Highlight.Normal
+          Endif
+      End Select
+
+    Endif
+
+    Highlight.Add(iState)
+    iState = iNextState
+
+  Next
+
+  If iNextState <> Highlight.Comment Then
+    iNextState = Highlight.Normal
+  Endif
+
+  Highlight.State = iNextState
+  Highlight.ShowLimit = False
 
 End
