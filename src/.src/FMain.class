@@ -294,11 +294,11 @@ Public Sub Processing()
   Select Case current_process
     
     Case PROCESS_1
-      cpu(process_1, ip_table1[ip_table_index1])
+      cpu(process_1, core_memory[ip_table1[ip_table_index1]])
       
     Case PROCESS_2
       
-      cpu(process_2, ip_table1[ip_table_index2])
+      cpu(process_2, core_memory[ip_table1[ip_table_index2]])
       
   End Select
   
@@ -307,9 +307,19 @@ End
 
 Public Sub cpu(warrior_process As Integer, instruction As String)
   'This is the routine which executes the code in the array
+  Dim sOpcode, sOpands, sDataA, sDataB As String
+  Dim nOpcode, nOpands As Integer
   
+  'split the instruction string
+  'find the opcode boundary.
+  nOpcode = InStr(instruction, " ")
+  sOpcode = Lower$(Left$(instruction, nOpcode))
+  sOpands = Right$(instruction, nOpcode)
+  sDataA = Mid$(sOpands, InStr(instruction, ","))
   
-  Select Case instruction
+  'sDataB = Right$(
+  
+  Select Case sOpcode
     Case I_DAT 
     Case I_MOV
     Case I_ADD

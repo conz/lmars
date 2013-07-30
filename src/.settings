@@ -2,22 +2,36 @@
 FMain=[]
 
 [Breakpoints]
-Count=0
+Breakpoint[1]="FMain.321"
+Count=1
 
 [DebugWindow]
-Count=0
+Count=3
+DebugWindow[1]="ip_table1"
+DebugWindow[2]="ip_table2"
+DebugWindow[3]="core_memory"
+
+[DebugWindow/Highlight]
+Geometry=[0,25,240,240]
 
 [DebugWindow/core_memory]
-Geometry=[2,25,210,304]
+Geometry=[2,25,240,304]
+
+[DebugWindow/ip_table1]
+Geometry=[0,25,240,240]
+
+[DebugWindow/ip_table2]
+Geometry=[-8,290,240,240]
 
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:111.13"
+File[2]=".src/FMain.class:312.31"
 Count=2
 
 [Watches]
-Count=4
-Watch[1]="stepx * i"
-Watch[2]="stepy * j"
+Count=3
+Watch[1]="iState"
+Watch[2]="sText"
+Watch[3]="sCar"
 
