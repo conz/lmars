@@ -295,10 +295,10 @@ Public Sub Processing()
     
     Case PROCESS_1
       cpu(process_1, core_memory[ip_table1[ip_table_index1]])
-      
+      ip_table1[ip_table_index1] = ip_table1[ip_table_index1] + 1 'incrememnt the instruction pointer for this process
     Case PROCESS_2
-      
       cpu(process_2, core_memory[ip_table1[ip_table_index2]])
+      ip_table1[ip_table_index2] = ip_table1[ip_table_index2] + 1 'incremement the instruction pointer for this process
       
   End Select
   
@@ -310,17 +310,35 @@ Public Sub cpu(warrior_process As Integer, instruction As String)
   Dim sOpcode, sOpands, sDataA, sDataB As String
   Dim nOpcode, nOpands As Integer
   
+  'first, we remove any comments
+  If InStr(instruction, ";") > 0 Then
+    instruction = Trim$(Left$(instruction, InStr(instruction, ";") - 1))
+  Endif
   'split the instruction string
   'find the opcode boundary.
-  nOpcode = InStr(instruction, " ")
-  sOpcode = Lower$(Left$(instruction, nOpcode))
-  sOpands = Right$(instruction, nOpcode)
-  sDataA = Mid$(sOpands, InStr(instruction, ","))
-  
-  'sDataB = Right$(
+  nOpcode = InStr(instruction, " ") - 1
+  If nOpcode > 0 Then
+    sOpcode = Lower$(Left$(instruction, nOpcode))
+    sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+    nOpands = InStr(sOpands, ",")
+    If nOpands > 0 
+      'We have two , separated by a comman. Let's split them
+      sDataA = Trim(Left$(sOpands, nOpands - 1))
+      sDataB = Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands)))
+    Else
+      'We have one operand, let's assign it
+      sDataA = sOpands
+    Endif
+    
+  Else
+    Message("Process #" & warrior_process & " died.")
+    ToolBarRunMode(False)
+    'Timer1.enabled = False
+  Endif
   
   Select Case sOpcode
-    Case I_DAT 
+    Case I_DAT
+      
     Case I_MOV
     Case I_ADD
     Case I_SUB 
