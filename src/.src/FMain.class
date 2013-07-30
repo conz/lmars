@@ -6,6 +6,8 @@ Public core_memory As New String[8000] 'stores the instruction code for each cel
 Public core_cell_colour As New Integer[8000] 'stores the colour of the last process which changed this cell
 'Public core_cell_colour[8000] As Integer 'stores the colour of the last process which changed this cell
 'Public Const Warrior1 As Integer = Color.red 'Color.red
+'
+'
 
 Public Const vertical_lines As Integer = 88
 Public Const horizontal_lines As Integer = 91
@@ -54,12 +56,20 @@ Public Const I_LDP As String = "ldp"
 Public Const I_STP As String = "stp"
 Public Const I_NOP As String = "NOP"
 
+Public Const PROCESS_1 As Integer = 1
+Public Const PROCESS_2 As Integer = 2
+
 Public grid_cells_x As Integer
 Public grid_cells_y As Integer
 
+Public warrior_start_position1 As Integer
+Public warrior_start_position2 As Integer
 
-
-
+Public current_process As Integer 'nominates which process is the currently active one
+Public ip_table1 As New Integer[] 'contains the two process table for the first warriors
+Public ip_table2 As New Integer[] 'contains the two process table for the second warriors
+Public ip_table_index1 As Integer 'specifies the current index into the instruction pointer table for warrior 1
+Public ip_table_index2 As Integer 'specifies the current index into the instruction pointer table for warrior 2
 
 
 Public Sub SetCellColour(cell As Integer, colour As Integer)
@@ -266,8 +276,61 @@ Public Sub Preload_Warriors()
 End
 
 Public Sub Processing()
+  'This Is The main routine For executing the code In the battle arena
+  'it begins by randozing which of the two warriors starts first
+  'this routine maintains state, so the it knows what the last process table used was
+  'then it executes one instruction from the process table of the first warrior
+  'it then executes one instruction from the process table of the next warrior
+
+  
+  'we first check to see if we've gone through here before, i.e, is this our first point of execution?
+  If current_process = 0 Then 
+    ip_table1.Add(warrior_start_position1)
+    ip_table2.Add(warrior_start_position2)
+    current_process = Int(Rnd(1, 3))
+  End If
+  
+
+  Select Case current_process
+    
+    Case PROCESS_1
+      cpu(process_1, ip_table1[ip_table_index1])
+      
+    Case PROCESS_2
+      
+      cpu(process_2, ip_table1[ip_table_index2])
+      
+  End Select
   
   
+End
+
+Public Sub cpu(warrior_process As Integer, instruction As String)
+  'This is the routine which executes the code in the array
+  
+  
+  Select Case instruction
+    Case I_DAT 
+    Case I_MOV
+    Case I_ADD
+    Case I_SUB 
+    Case I_MUL 
+    Case I_DIV 
+    Case I_MOD 
+    Case I_JMP 
+    Case I_JMZ 
+    Case I_JMN 
+    Case I_DJN 
+    Case I_SPL 
+    Case I_CMP 
+    Case I_SEQ 
+    Case I_SNE 
+    Case I_SLT 
+    Case I_LDP 
+    Case I_STP 
+    Case I_NOP  
+        
+  End Select
   
 End
 
@@ -299,7 +362,7 @@ End
 Public Sub tbStop_Click()
 
   ToolBarRunMode(False)
-  
+  Timer1.enabled = False
 
 End
 
@@ -321,7 +384,7 @@ End
 
 Public Sub tbRun_Click()
 'copy the contents of the two warrior editors into the core array
-Dim start_position As Integer
+'Dim start_position As Integer
 
 'we need to check to see if we're in a paused state; if so, we re-enable the timer, and exit this function
 If tbPause.enabled = True Then
@@ -334,15 +397,15 @@ ClearCore
 ToolBarRunMode(True)
 
 'select the random position of warrior 1
-start_position = Int(Rnd(1, 7800))
+warrior_start_position1 = Int(Rnd(1, 7800))
 
 'Message(Str$(start_position))
-LoadWarrior(start_position, ed1.text, Color.Green)
+LoadWarrior(warrior_start_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
-start_position = Int(Rnd(1, 7800))
+warrior_start_position2 = Int(Rnd(1, 7800))
 'Message(Str$(start_position))
-LoadWarrior(start_position, ed2.text, Color.Magenta)
+LoadWarrior(warrior_start_position1, ed2.text, Color.Magenta)
 
 Timer1.Enabled = True
 
@@ -360,6 +423,7 @@ Public Sub Timer1_Timer()
   'If togClear.Value Then dW.Clear()
   Wait 0.001
   Timer1.enabled = False
+  Processing
   DrawCore
   Timer1.enabled = True
   
