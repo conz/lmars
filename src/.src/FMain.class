@@ -290,7 +290,20 @@ Public Sub Processing()
     current_process = Int(Rnd(1, 3))
   End If
   
-
+  'We need to handle Asserts
+  ' CORESIZE -- the size of the core (default 8000)
+  ' PSPACESIZE - - the size Of the P - Space( Default 500)
+  ' MAXCYCLES - - the number Of cycles Until a tie Is Declared( Default 80000)
+  ' MAXPROCESSES - - the maximum size Of the process queue( Default 8000)
+  ' WARRIORS - - the number Of programs In the core(usually 2)
+  ' MAXLENGTH - - the maximum length Of a program( Default 100)
+  ' CURLINE - - the number Of instructions compiled so far(0 To MAXLENGTH)
+  ' MINDISTANCE - - the minimum distance between two warriors( Default 100)
+  ' VERSION - - the version Of pMARS, multiplied by 100(80 Or more)
+  
+  ''We need to handle #defines
+  '
+  
   Select Case current_process
     
     Case PROCESS_1
