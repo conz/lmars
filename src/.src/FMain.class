@@ -294,22 +294,24 @@ Public Sub Processing()
   Select Case current_process
     
     Case PROCESS_1
-      cpu(process_1, core_memory[ip_table1[ip_table_index1]])
+      cpu1() 'execute the code
       ip_table1[ip_table_index1] = ip_table1[ip_table_index1] + 1 'incrememnt the instruction pointer for this process
     Case PROCESS_2
-      cpu(process_2, core_memory[ip_table1[ip_table_index2]])
-      ip_table1[ip_table_index2] = ip_table1[ip_table_index2] + 1 'incremement the instruction pointer for this process
+      'cpu2(process_2, core_memory[ip_table1[ip_table_index2]])
+      'ip_table1[ip_table_index2] = ip_table1[ip_table_index2] + 1 'incremement the instruction pointer for this process
       
   End Select
   
   
 End
 
-Public Sub cpu(warrior_process As Integer, instruction As String)
+Public Sub cpu1()
   'This is the routine which executes the code in the array
   Dim sOpcode, sOpands, sDataA, sDataB As String
   Dim nOpcode, nOpands As Integer
+  Dim instruction As String
   
+  instruction = core_memory[ip_table1[ip_table_index1]]
   'first, we remove any comments
   If InStr(instruction, ";") > 0 Then
     instruction = Trim$(Left$(instruction, InStr(instruction, ";") - 1))
@@ -331,15 +333,23 @@ Public Sub cpu(warrior_process As Integer, instruction As String)
     Endif
     
   Else
-    Message("Process #" & warrior_process & " died.")
+    Message("Process #1 thread #" & ip_table_index1 & " died.")
     ToolBarRunMode(False)
     'Timer1.enabled = False
   Endif
   
   Select Case sOpcode
     Case I_DAT
+      'the process has executed an illegal instruction
+      'If this is the only thread in this warrior's process table, then this warrior has died
+      If ip_table_index1 > 1 Then
+        Message(" Process #1 thread #" & ip_table_index1 & " died.")
+      Endif
+      
       
     Case I_MOV
+      'we found a MOV instruction. We have to copy the contets of one address to another.
+      
     Case I_ADD
     Case I_SUB 
     Case I_MUL 
