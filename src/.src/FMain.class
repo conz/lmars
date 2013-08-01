@@ -49,12 +49,14 @@ Public Const I_JMN As String = "jmn"
 Public Const I_DJN As String = "djn"
 Public Const I_SPL As String = "spl"
 Public Const I_CMP As String = "cmp"
-Public Const I_SEQ As String = "SEQ"
-Public Const I_SNE As String = "SNE"
+Public Const I_SEQ As String = "seq"
+Public Const I_SNE As String = "sne"
 Public Const I_SLT As String = "slt"
 Public Const I_LDP As String = "ldp"
 Public Const I_STP As String = "stp"
-Public Const I_NOP As String = "NOP"
+Public Const I_NOP As String = "nop"
+Public Const I_END As String = "end"
+
 
 Public Const PROCESS_1 As Integer = 1
 Public Const PROCESS_2 As Integer = 2
@@ -97,6 +99,20 @@ Public Sub GetCellContents(cell As Integer, value As String)
   
 End
 
+Public Function StripComments(sCode As String) As String
+  'Given a string, strip out any comments, which are denoted by a semi-colon, until the end of the line
+  Dim nPos As Integer
+  
+  nPos = InStr(sCode, ";")
+  If nPos > 1 Then
+    'we've found a comment, so we now excise it
+    Return Trim$(Left$(sCode, nPos - 1))
+  Else
+    Return sCode
+  Endif
+  
+End
+
 Public Sub ClearCore()
   'Use this function to clear (or zero out) the contents of the entire core, to ensure that if another battle is run, it has a clean core
   core_memory.clear 'wipes all the core contents
@@ -115,7 +131,13 @@ Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As 
   
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
+    'Let's strip out comments
+    code_line = Lower$(StripComments(code_line))
+    
+    'Lets process the labels. 
     If Trim$(code_line) <> "" Then
+      'We have to cater for an END instruction, which means we don't want to load any more of the program, even if it is present
+      If code_line = I_END Then Break
       core_memory[load_point + i] = Trim$(code_line)
       core_cell_colour[load_point + i] = warrior_colour
       Print "Code at " & Str$(load_point + i)
@@ -301,6 +323,7 @@ Public Sub Processing()
     ip_table2.Add(warrior_start_position2)
     current_process = Int(Rnd(1, 3))
   End If
+  
   
   'We need to handle Asserts
   ' CORESIZE -- the size of the core (default 8000)
