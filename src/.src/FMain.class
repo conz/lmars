@@ -133,58 +133,8 @@ Public Sub DrawCore()
   Dim counter As Integer
   Dim i, j, k As Integer
   Dim x1, y1, x2, y2 As Integer
-  Dim stepx, stepy As Integer
-  Dim cursor_pos As Integer
-  
-  Draw.Begin(DrawingArea1)
-  Draw.Clear
-  Draw.FillStyle = 1
-  Draw.Foreground = Color.Gray
-  x1 = 0
-  y1 = 0
-  x2 = DrawingArea1.Width
-  y2 = DrawingArea1.Height
-  stepx = (x2 - x1) / vertical_lines + 1
-  stepy = (y2 - y1) / horizontal_lines + 1
-  
-  For i = 1 To vertical_lines + 1
-    Draw.Line(x1 + i * stepx, y1, x1 + i * stepx, y2)      
-  Next 
-  grid_cells_x = i 'Set the number of grid cells in the horizontal length
-  
-  For j = 1 To horizontal_lines + 1
-    Draw.Line(x1, y1 + (j * stepy), x2, y1 + (j * stepy))        
-  Next
-  grid_cells_y = j 'Set the number of grid cells in the vertical length
-  
-  'we now paint in the programs as they appear in the core array
-  Draw.FillStyle = Fill.Solid
-  
-  For i = 1 To vertical_lines + 1
-     For j = 1 To horizontal_lines + 1
-      cursor_pos = i + j * vertical_lines
-      If (cursor_pos > 0) And (cursor_pos < max_core_size) Then
-        If core_memory[cursor_pos] <> "" Then
-          Draw.Foreground = core_cell_colour[cursor_pos]
-          Draw.Rect(stepx * i, stepy * j, stepx, stepy)
-        Endif
-      Endif     
-     Next
-  Next    
-  
-  Draw.End
-  
-End
-
-Public Sub DrawCore2()
-  ' 'paints the drawing area with the contents of the core memory
-  ' 'use this var for our loop counter
-  Dim counter As Integer
-  Dim i, j, k As Integer
-  Dim x1, y1, x2, y2 As Integer
   Dim stepx, stepy As Float
   Dim cursor_pos As Integer
-
   
   Draw.Begin(DrawingArea1)
   Draw.Clear
@@ -208,16 +158,16 @@ Public Sub DrawCore2()
     Draw.Line(x1, y1 + Int(j * stepy), x2, y1 + Int(j * stepy))      
     counter += 1  
   Next
-  Print counter
+  'Print counter
   grid_cells_y = j 'Set the number of grid cells in the vertical length
   
-  Print grid_cells_x, grid_cells_y
+  'Print grid_cells_x, grid_cells_y
   'we now paint in the programs as they appear in the core array
   Draw.FillStyle = Fill.Solid
   
   For i = 1 To vertical_lines
      For j = 1 To horizontal_lines
-      cursor_pos = i + (j - 1) * horizontal_lines
+      cursor_pos = i + (j - 1) * vertical_lines
       If (cursor_pos > 0) And (cursor_pos < max_core_size) Then
         'Print core_memory[cursor_pos]
         If core_memory[cursor_pos] <> "" Then
@@ -279,8 +229,7 @@ Public Sub Resize_me()
    
   'Expander1.width = FMain.width - 20
   'Expander1.height = FMain.height - 50
-  'DrawCore
-  DrawCore2
+  DrawCore
 End
 
 Public Sub PeekCore()
@@ -297,6 +246,7 @@ Public Sub PeekCore()
   x = (Mouse.x / stepx)
   y = (Mouse.y / stepy)
   cursor_pos = x + y * vertical_lines
+  'Print x, y, cursor_pos
   
   
   If (cursor_pos > 0) And (cursor_pos <= max_core_size) Then
@@ -748,7 +698,7 @@ Public Sub Timer1_Timer()
   'Wait 0.001
   'Timer1.enabled = False
   Processing
-  DrawCore2
+  DrawCore
   'Timer1.enabled = True
   
 End
