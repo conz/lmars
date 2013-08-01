@@ -9,8 +9,8 @@ Public core_cell_colour As New Integer[8000] 'stores the colour of the last proc
 '
 '
 
-Public Const vertical_lines As Integer = 88
-Public Const horizontal_lines As Integer = 91
+Public Const vertical_lines As Integer = 87
+Public Const horizontal_lines As Integer = 90
 Public Const max_core_size As Integer = 8000
 
 'Redcode assembly instruction codes:
@@ -115,13 +115,15 @@ Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As 
   
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
-    core_memory[load_point + i] = code_line
-    core_cell_colour[load_point + i] = warrior_colour
-    'DrawWarriorCell(load_point + i)
-    i += 1
+    If Trim$(code_line) <> "" Then
+      core_memory[load_point + i] = Trim$(code_line)
+      core_cell_colour[load_point + i] = warrior_colour
+      Print "Code at " & Str$(load_point + i)
+      i += 1
+    End If
   Next
   
-  DrawCore
+  'DrawCore
   
 End
 
@@ -182,6 +184,7 @@ Public Sub DrawCore2()
   Dim x1, y1, x2, y2 As Integer
   Dim stepx, stepy As Float
   Dim cursor_pos As Integer
+
   
   Draw.Begin(DrawingArea1)
   Draw.Clear
@@ -194,26 +197,33 @@ Public Sub DrawCore2()
   stepx = (x2 - x1) / vertical_lines + 1
   stepy = (y2 - y1) / horizontal_lines + 1
   
-  For i = 1 To vertical_lines + 1
-    Draw.Line(x1 + Int(i * stepx), y1, x1 + Int(i * stepx), y2)      
-  Next 
+  For i = 1 To vertical_lines
+    Draw.Line(x1 + Int(i * stepx), y1, x1 + Int(i * stepx), y2)
+    counter += 1      
+  Next
+  Print counter 
   grid_cells_x = i 'Set the number of grid cells in the horizontal length
   
-  For j = 1 To horizontal_lines + 1
-    Draw.Line(x1, y1 + Int(j * stepy), x2, y1 + Int(j * stepy))        
+  For j = 1 To horizontal_lines
+    Draw.Line(x1, y1 + Int(j * stepy), x2, y1 + Int(j * stepy))      
+    counter += 1  
   Next
+  Print counter
   grid_cells_y = j 'Set the number of grid cells in the vertical length
   
+  Print grid_cells_x, grid_cells_y
   'we now paint in the programs as they appear in the core array
   Draw.FillStyle = Fill.Solid
   
-  For i = 1 To vertical_lines + 1
-     For j = 1 To horizontal_lines + 1
-      cursor_pos = i + j * vertical_lines
+  For i = 1 To vertical_lines
+     For j = 1 To horizontal_lines
+      cursor_pos = i + (j - 1) * horizontal_lines
       If (cursor_pos > 0) And (cursor_pos < max_core_size) Then
+        'Print core_memory[cursor_pos]
         If core_memory[cursor_pos] <> "" Then
           Draw.Foreground = core_cell_colour[cursor_pos]
-          Draw.Rect(Int(stepx * i), Int(stepy * j), Int(stepx), Int(stepy))
+          Draw.Rect(Int(stepx * (i - 1)), Int(stepy * (j - 1)), Int(stepx), Int(stepy))
+          Print i - 1, j - 1, cursor_pos
         Endif
       Endif     
      Next
@@ -234,7 +244,7 @@ Public Sub ToolBarRunMode(run_mode As Boolean)
   tbOpen2.enabled = Not run_mode
   tbSave2.Enabled = Not run_mode
   tbRun.enabled = Not run_mode
-  
+  Timer1.enabled = run_mode
   
 End
 
@@ -284,11 +294,13 @@ Public Sub PeekCore()
   stepx = DrawingArea1.Width / vertical_lines
   stepy = DrawingArea1.Height / horizontal_lines
   'the cell number maps into the core_memory as x*91 + 88
-  x = (Mouse.x / stepx) + 1
+  x = (Mouse.x / stepx)
   y = (Mouse.y / stepy)
   cursor_pos = x + y * vertical_lines
   
+  
   If (cursor_pos > 0) And (cursor_pos <= max_core_size) Then
+    'Print x, y, cursor_pos, core_memory[cursor_pos]  
     core_cell_contents = core_memory[cursor_pos]
     If core_cell_contents = "" Then core_cell_contents = "Dat #0, #0" Else core_cell_contents = core_memory[cursor_pos]
     DrawingArea1.tooltip = "Memory Address: " & Str$(cursor_pos) & " :: " & core_cell_contents
@@ -708,15 +720,18 @@ ClearCore
 ToolBarRunMode(True)
 
 'select the random position of warrior 1
-warrior_start_position1 = Int(Rnd(1, 7800))
+warrior_start_position1 = Int(Rnd(0, 7800))
+warrior_start_position1 = 1
 
 'Message(Str$(start_position))
 LoadWarrior(warrior_start_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
-warrior_start_position2 = Int(Rnd(1, 7800))
+warrior_start_position2 = Int(Rnd(0, 7800))
+warrior_start_position2 = 92
+
 'Message(Str$(start_position))
-LoadWarrior(warrior_start_position1, ed2.text, Color.Magenta)
+LoadWarrior(warrior_start_position2, ed2.text, Color.Magenta)
 
 Timer1.Enabled = True
 
@@ -730,13 +745,11 @@ End
 
 Public Sub Timer1_Timer()
 
-  'DoGravity
-  'If togClear.Value Then dW.Clear()
-  Wait 0.001
-  Timer1.enabled = False
+  'Wait 0.001
+  'Timer1.enabled = False
   Processing
-  DrawCore
-  Timer1.enabled = True
+  DrawCore2
+  'Timer1.enabled = True
   
 End
 
@@ -767,7 +780,7 @@ End
 
 Public Sub tbPause_Click()
 
-  tbRun.enabled = True
+  tbRun.enabled = False
 
 End
 
