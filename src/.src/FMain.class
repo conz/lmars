@@ -435,6 +435,216 @@ Public Sub cpu1()
   
 End
 
+'==========================================================
+ '                                         Muhammad Abubakar
+ '                                     <joehacker@yahoo.com>
+ '                                   <http://go.to/abubakar>
+ '==========================================================
+ 'You can use the code as u like in your projects but please
+ 'give credit where credit is due :)
+
+
+ Public Function parse(expr As String) As Float
+     Dim i As Float, a As String
+     Dim start As Float, endat As Float
+    
+     expr = Trim(expr)
+     If InStr(expr, "(") <> 0 Then
+         i = 1
+         While (InStr(expr, "(") <> 0)
+             a = Mid(expr, i, 1)
+             If a = "(" Then
+                 start = i
+                 
+             Else If a = ")" Then
+                 If start = 0 Then
+                     'MsgBox "Invalid Syntax."
+                     Return
+                 
+                 End If
+                 endat = i
+                 i = Val(givePrecedence(Mid(expr, start + 1, endat - start - 1)))
+                 expr = Left(expr, start - 1) & Str(i) & Right(expr, Len(expr) - endat)
+                 start = 0
+                 endat = 0
+                 i = 0
+             End If
+             i = i + 1
+         Wend
+     End If
+     If expr <> "" Then
+       Return Val(givePrecedence(expr))
+     Else
+       Return i 
+     End If
+ End Function
+
+ Private Function Evaluate(sTemp As String, sign As String, prevExpr As String) As String
+     Select Case sign
+         Case "+"
+             Return Str(Val(prevExpr) + Val(sTemp))
+         Case "-"
+             Return Str(Val(prevExpr) - Val(sTemp))
+         Case "*"
+             Return Str(Val(prevExpr) * Val(sTemp))
+         Case "/"
+             Return Str(Val(prevExpr) / Val(sTemp))
+         Case "^"
+             Return Str(Val(prevExpr) ^ Val(sTemp))
+     End Select
+ End Function
+
+ Private Function givePrecedence(expr As String) As String
+     Dim X As Integer
+     Dim sTemp As String
+     
+     Do While (InStr(expr, "!") <> 0 Or InStr(expr, "*") <> 0 Or InStr(expr, "/") <> 0 Or InStr(expr, "^") <> 0 Or InStr(expr, "+") <> 0 Or InStr(expr, "-") <> 0)
+         Wait
+         X = InStr(expr, "!")
+         If X <> 0 Then
+             sTemp = solveFor("!", expr)
+         Else
+             X = InStr(expr, "^")
+             If X <> 0 Then
+                 sTemp = solveFor("^", expr)
+             Else
+                 X = InStr(expr, "/")
+                 If X <> 0 Then
+                     sTemp = solveFor("/", expr)
+                 Else
+                     X = InStr(expr, "*")
+                     If X <> 0 Then
+                         sTemp = solveFor("*", expr)
+                     Else
+                         X = InStr(expr, "+")
+                         If X <> 0 Then
+                            sTemp = solveFor("+", expr)
+                         Else
+                             X = InStr(expr, "-")
+                             If X <> 0 Then
+                                 sTemp = solveFor("-", expr)
+                             End If
+                         End If
+                     End If
+                 End If
+             End If
+         End If
+         If sTemp = "" Then
+             Break
+         Else
+             expr = sTemp
+         End If
+     Loop
+     Return expr
+     
+ End Function
+ Private Function GetNumFrom(Pos As Integer, expr As String) As String
+     Dim i As Integer
+     Dim sTemp As String
+     Dim a As String
+     
+     If Pos <= Len(expr) Then
+         For i = Pos To Len(expr)
+         '{
+             a = Mid(expr, i, 1)
+             If Asc(a) >= 48 And Asc(a) <= 58 Or a = " " Or a = "." Or ((a = "-" Or a = "+") And Trim(Temp) = "") Then
+                 sTemp = sTemp & a
+             Else
+                 If LCase(a) = "e" Then
+                 sTemp = sTemp & "E" & GetNumFrom(i + 1, expr) 'Recursion
+                 i = Len(expr)
+                 Else
+                 'wrong syntax, u can handle error as you like
+                 End If
+             i = Len(expr)
+             End If
+         Next
+         '}
+     Return Temp
+     End If
+ End Function
+ Private Function solveFor(sign As String, expr As String) As String
+         '{
+             Dim X As Integer, start As Integer, endat As Integer
+             Dim sTemp As String, a As String, i As Integer
+             start = 1
+             X = InStr(expr, sign)
+             If sign <> "!" Then
+                 If sign = "+" Or sign = "-" Then
+                     a = GetNumFrom(1, expr)
+                     If Len(a) = Len(expr) Then
+                         Return ""
+
+                     End If
+                     sTemp = GetNumFrom(Len(a) + 1, expr)
+                     If Sgn(Val(sTemp)) < 0 Then
+                        sign = "-" 
+                      Else 
+                        sign = "+"
+                     End If
+                     X = InStr(Len(a), expr, sign)
+                     endat = Len(a) + Len(sTemp)
+                     sTemp = Evaluate(GetNumFrom(X + 1, expr), sign, a)
+                     expr = Left(expr, start - 1) & sTemp & Right(expr, Len(expr) - endat)
+                     Return expr
+                     
+                 End If
+             End If
+             'i = InStr(x + 1, expr, sign)
+             
+             For i = X - 1 To 1 Step -1 'going back
+                 a = Mid(expr, i, 1)
+                 If Asc(a) >= 48 And Asc(a) <= 58 Or a = " " Or a = "." Or LCase(a) = "e" Then
+                     sTemp = a & sTemp
+                 Else
+                     If (a = "-" Or a = "+") And i - 1 > 0 Then
+                         If Mid(expr, i - 1, 1) = "e" Then
+                             sTemp = a & sTemp
+                         Else
+                             start = i + 1
+                             i = 1
+                         End If
+                     Else
+                         start = i + 1
+                         i = 1
+                     End If
+                 End If
+             Next
+             If Trim(sTemp) <> "" Then
+                 'solving for factorial
+                 If sign = "!" Then
+                     If Int(Val(sTemp)) <> Val(sTemp) Then
+                         'wrong syntax, handle it in whatever way u awnt
+                     Else
+                         expr = Left(expr, start - 1) & Str(fact(Val(sTemp))) & Right(expr, Len(expr) - X)
+                         Return expr
+                     End If
+                 Else
+                     'its not a factorial calculations
+                     endat = X + Len(GetNumFrom(X + 1, expr))
+                     sTemp = Evaluate(GetNumFrom(X + 1, expr), sign, sTemp)
+                     expr = Left(expr, start - 1) & sTemp & Right(expr, Len(expr) - endat)
+                     'Job done, go back
+                     Return expr
+                 End If
+             Else
+                 Return ""
+             End If
+             
+ End Function
+ 
+ 'Algo for factorial
+ Private Function fact(num As Integer) As Float
+     Dim b As Float
+     Dim i As Integer
+     b = 1
+     For i = 1 To num
+         b = b * i 'I wish I could write it as b * = num :(
+     Next
+     Return b
+
+ End Function
+
 
 Public Sub _new()
 'Is called at the start of the program
