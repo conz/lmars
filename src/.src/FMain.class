@@ -149,6 +149,9 @@ Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As 
   
 End
 
+
+
+
 Public Sub DrawCore()
   ' 'paints the drawing area with the contents of the core memory
   ' 'use this var for our loop counter
@@ -302,6 +305,36 @@ Catch
   
 End
 
+Public Sub SaveWarrior(warrior As Integer, Optional bSaveAs As Boolean)
+  'we need to provide the user with a file open dialog box so they can select a redcode warrior
+  Dim sPath As String
+  Dialog.Title = "Save the Redcode Warrior file"
+  Dialog.Title = "Specific a Filename"
+  Dialog.Filter = ["*.red", "Redcode Files", "*", "All files"]
+  
+  If warrior = PROCESS_1 Then
+    sPath = Settings["warrior1", "/home/conz/Documents/development/gambas/lmars/warriors/imp.red"]
+  Else
+    sPath = Settings["warrior2", "/home/conz/Documents/development/gambas/lmars/warriors/dwarf.red"]
+  Endif
+  
+  Dialog.Path = sPath
+  If Dialog.SaveFile() Then Return
+  sPath = Dialog.Path
+  
+  If warrior = PROCESS_1 Then
+    File.Save(sPath, ed1.Text)
+    Settings["warrior1"] = Dialog.Path
+  Else 'It's PROCESS_2
+    File.Save(sPath, ed2.Text)
+    Settings["warrior2"] = Dialog.Path
+  Endif
+  
+Catch
+  Message.Info("Error opening file\n\n" & Error.Text)
+  
+  
+End
 Public Sub Preload_Warriors()
   'preload the warriors last used
   ed1.text = File.Load(Settings["warrior1", "/home/conz/Documents/development/gambas/lmars/warriors/imp.red"])
@@ -669,12 +702,12 @@ Public Sub Form_Resize()
 End
 
 Public Sub tbOpen1_Click()
-  OpenWarrior(1)
+  OpenWarrior(PROCESS_1)
   
 End
 
 Public Sub tbOpen2_Click()
-  OpenWarrior(2)
+  OpenWarrior(PROCESS_2)
 
 End
 
@@ -846,5 +879,17 @@ Public Sub ed1_Highlight()
 
   Highlight.State = iNextState
   Highlight.ShowLimit = False
+
+End
+
+Public Sub tbSave1_Click()
+
+  SaveWarrior(PROCESS_1)
+
+End
+
+Public Sub tbSave2_Click()
+
+  SaveWarrior(PROCESS_2)
 
 End
