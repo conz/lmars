@@ -104,7 +104,7 @@ Public Function StripComments(sCode As String) As String
   Dim nPos As Integer
   
   nPos = InStr(sCode, ";")
-  If nPos > 1 Then
+  If nPos > 0 Then
     'we've found a comment, so we now excise it
     Return Trim$(Left$(sCode, nPos - 1))
   Else
