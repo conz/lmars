@@ -112,6 +112,29 @@ Public Function StripComments(sCode As String) As String
   Endif
   
 End
+Public Function OrgAddress(sCode As String) As Integer
+  'scans the supplied command line and if there is an ORG command, returns the address of where the ORG command points to
+  'REMINDER: there are two forms of the org address, one is:
+  '   ORG imp
+  '   
+  '   imp: mov 0, 1
+  '   
+  ' The other is the older style, designated by the nominating the ORG address in the END statement, like this:
+  ' 
+  '   imp: mov 0, 1
+  '   
+  '   end imp
+  ' 
+  
+  'The strategy may need to be:
+  ' scan the passed string, if it is either an ORG with a label or an END insruction, with a label, then we seek that label, and figure out the address for
+  ' it by scanning all of the command lines until that label is found.
+  ' 
+  ' 
+  
+  
+End
+
 
 Public Sub ClearCore()
   'Use this function to clear (or zero out) the contents of the entire core, to ensure that if another battle is run, it has a clean core
@@ -133,6 +156,15 @@ Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As 
   For Each code_line In code_lines
     'Let's strip out comments
     code_line = Lower$(StripComments(code_line))
+    
+    'We need to figure out if this program has an ORG statement
+    'We check each line
+    If OrgAddress(code_line) Then
+      'if there is an explicit ORG command, then we have to set the warrior execution point to be that
+      '
+      
+    Endif
+    
     
     'Lets process the labels. 
     If Trim$(code_line) <> "" Then
