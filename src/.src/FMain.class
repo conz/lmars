@@ -56,6 +56,7 @@ Public Const I_LDP As String = "ldp"
 Public Const I_STP As String = "stp"
 Public Const I_NOP As String = "nop"
 Public Const I_END As String = "end"
+Public Const I_ORG As String = "org"
 
 
 Public Const PROCESS_1 As Integer = 1
@@ -112,7 +113,7 @@ Public Function StripComments(sCode As String) As String
   Endif
   
 End
-Public Function OrgAddress(sCode As String) As Integer
+Public Sub OrgAddress(code As String)
   'scans the supplied command line and if there is an ORG command, returns the address of where the ORG command points to
   'REMINDER: there are two forms of the org address, one is:
   '   ORG imp
@@ -125,14 +126,72 @@ Public Function OrgAddress(sCode As String) As Integer
   '   
   '   end imp
   ' 
+  Dim code_line, code_lines, sLabel As String
+  Dim code_line2, code_lines2 As String
+  Dim nLabel, i As Integer
   
   'The strategy may need to be:
-  ' scan the passed string, if it is either an ORG with a label or an END insruction, with a label, then we seek that label, and figure out the address for
-  ' it by scanning all of the command lines until that label is found.
-  ' 
-  ' 
+  ' scan the entire program and if there exists an ORG or an END, then split the program into separate strings, then scan each, 
+  ' if it is either an ORG with a label or an END insruction, with a label, then we seek that label, and figure out the address for
+  ' it by scanning all of the command lines until that label is found. Then patch the execution starting point with tha information
   
+  'first thing we do is see if there is any 'org' or 'end' strings in this entire program
+  If (InStr(LCase(code), I_ORG) = 0) And (InStr(LCase(code), I_END) = 0) Then Return 'If there are no END or ORG statements, there are no changes needed to the start of execution
   
+  'We are here because there is either an ORG or END statement somewhere in this warrior code' let's find it.
+  'For the purposes of sanity, if the warrior code includes both an program initial origin in both the ORG and in the END statement, we use the former by preference
+    
+  code_lines = Split(code, "\n")
+  For Each code_line In code_lines
+    nLabel = InStr(LCase(Trim(code_line)), I_ORG)
+    
+    If nLabel > 0 Then 'we're assuming code that looks like this:  org imp
+      
+      'we assueme that the label follows immediately after any white-space which follows the ORG
+      nLabel = nLabel + Len(I_ORG)
+      sLabel = Trim(Mid(Trim(code_line), nLabel))
+      
+      'we have the label string, now we need to find it in the rest of the warrior code
+      'we shall assume that the label comes after the ORG statement, so that it's somewhere in the remainder of the program code
+    Else
+      'if this line doesn't have an ORG statement, perhaps it has an END statement. If that
+      'END statement is followed by a string, then that would be categorised as a label
+      
+      nLabel = InStr(LCase(Trim(code_line)), I_END)
+      If nLabel > 0 Then 'we're assuming code that looks like this:  end imp
+      
+        'we assueme that the label follows immediately after any white-space which follows the END
+        nLabel = nLabel + Len(I_END)
+        sLabel = Trim(Mid(Trim(code_line), nLabel))
+        'we have the label string, now we need to find it in the rest of the warrior code
+        'we shall assume that the label comes after the END statement, so that it's somewhere in the remainder of the program code
+        'However, as the END statement is the last statement, that means we've already gone through the warrior code, therefore, we 
+        'have to "rewind" it and start from the top.
+        code_lines2 = Split(code, "\n")
+        For Each code_line2 In code_lines2
+          'we rewind the program, and parse each line, now looking for the label we found above
+          'The format which is acceptable for a label is either: <label>  <command>
+          'or: <label>: command
+          'so, first we find if the line has the label with colon
+          nLabel = InStr(LTrim(LCase(code_line2)), sLabel & ":")
+        
+          If nLabel = 0 Then
+            'we're here because we couldn't find the the label with colon, so perhaps it's without colon
+            nLabel = InStr(LCase(Trim(code_line2)), sLabel)
+            
+          End If
+          If nLabel > 0 Then 'we've found our label string, so let's check if it's in the right position to be classified as a label, ie, at the start of the line
+            If (Mid(code_line2, 1, Len(sLabel)) = sLabel) Or (Mid(code_line2, 1, Len(sLabel & ":")) = sLabel & ":")
+              'We're here because we've found the label in the right position, i.e, at the start
+              '
+            End If
+          End If
+          i += 1  '
+        Next
+      End If
+    End If
+  Next    
+    
 End
 
 
@@ -152,19 +211,15 @@ Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As 
   Dim code_line As String
   Dim i As Integer
   
+  'if there is an explicit ORG command, then we have to set the warrior execution point to be that
+  'We need to figure out if this program has an ORG statement
+  'and if it does, to set the start of execution accordingly
+  OrgAddress(code)
+  
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
     'Let's strip out comments
     code_line = Lower$(StripComments(code_line))
-    
-    'We need to figure out if this program has an ORG statement
-    'We check each line
-    If OrgAddress(code_line) Then
-      'if there is an explicit ORG command, then we have to set the warrior execution point to be that
-      '
-      
-    Endif
-    
     
     'Lets process the labels. 
     If Trim$(code_line) <> "" Then
