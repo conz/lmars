@@ -65,6 +65,9 @@ Public Const PROCESS_2 As Integer = 2
 Public grid_cells_x As Integer
 Public grid_cells_y As Integer
 
+Public warrior_load_position1 As Integer
+Public warrior_load_position2 As Integer
+
 Public warrior_start_position1 As Integer
 Public warrior_start_position2 As Integer
 
@@ -113,7 +116,7 @@ Public Function StripComments(sCode As String) As String
   Endif
   
 End
-Public Sub OrgAddress(code As String)
+Public Sub OrgAddress(warrior_id As Integer, code As String, load_point As Integer)
   'scans the supplied command line and if there is an ORG command, returns the address of where the ORG command points to
   'REMINDER: there are two forms of the org address, one is:
   '   ORG imp
@@ -125,9 +128,8 @@ Public Sub OrgAddress(code As String)
   '   imp: mov 0, 1
   '   
   '   end imp
-  ' 
-  Dim code_line, code_lines, sLabel As String
-  Dim code_line2, code_lines2 As String
+  Dim code_lines, code_lines2 As String[]
+  Dim code_line, code_line2, sLabel As String
   Dim nLabel, i As Integer
   
   'The strategy may need to be:
@@ -149,10 +151,43 @@ Public Sub OrgAddress(code As String)
       
       'we assueme that the label follows immediately after any white-space which follows the ORG
       nLabel = nLabel + Len(I_ORG)
-      sLabel = Trim(Mid(Trim(code_line), nLabel))
+      sLabel = LCase(Trim(Mid(Trim(code_line), nLabel)))
       
       'we have the label string, now we need to find it in the rest of the warrior code
       'we shall assume that the label comes after the ORG statement, so that it's somewhere in the remainder of the program code
+      '
+      code_lines2 = Split(code, "\n")
+      For Each code_line2 In code_lines2
+        'we rewind the program, and parse each line, now looking for the label we found above
+        'The format which is acceptable for a label is either: <label>  <command>
+        'or: <label>: command
+        'so, first we find if the line has the label with colon
+        nLabel = InStr(LTrim(LCase(code_line2)), sLabel & ":")
+      
+        If nLabel = 0 Then
+          'we're here because we couldn't find the the label with colon, so perhaps it's without colon
+          nLabel = InStr(LCase(Trim(code_line2)), sLabel)
+            
+        End If
+        If nLabel > 0 Then 'we've found our label string, so let's check if it's in the right position to be classified as a label, ie, at the start of the line
+          If (Mid(code_line2, 1, Len(sLabel)) = sLabel) Or (Mid(code_line2, 1, Len(sLabel & ":")) = sLabel & ":")
+            'We're here because we've found the label in the right position, i.e, at the start
+            Print "found label execution startpoint"
+            'we need to set the execution point for this program as being equal to i + 1.
+            Select Case warrior_id
+              Case PROCESS_1
+                warrior_start_position1 = load_point + i
+                'Do we need to remove the label form this line? 
+                Return
+              Case PROCESS_2
+                warrior_start_position2 = load_point + i
+                Return
+            End Select
+            
+          End If
+        End If
+        i += 1  '
+      Next
     Else
       'if this line doesn't have an ORG statement, perhaps it has an END statement. If that
       'END statement is followed by a string, then that would be categorised as a label
@@ -162,7 +197,7 @@ Public Sub OrgAddress(code As String)
       
         'we assueme that the label follows immediately after any white-space which follows the END
         nLabel = nLabel + Len(I_END)
-        sLabel = Trim(Mid(Trim(code_line), nLabel))
+        sLabel = LCase(Trim(Mid(Trim(code_line), nLabel)))
         'we have the label string, now we need to find it in the rest of the warrior code
         'we shall assume that the label comes after the END statement, so that it's somewhere in the remainder of the program code
         'However, as the END statement is the last statement, that means we've already gone through the warrior code, therefore, we 
@@ -183,7 +218,15 @@ Public Sub OrgAddress(code As String)
           If nLabel > 0 Then 'we've found our label string, so let's check if it's in the right position to be classified as a label, ie, at the start of the line
             If (Mid(code_line2, 1, Len(sLabel)) = sLabel) Or (Mid(code_line2, 1, Len(sLabel & ":")) = sLabel & ":")
               'We're here because we've found the label in the right position, i.e, at the start
-              '
+              '            'we need to set the execution point for this program as being equal to i + 1.
+            Select Case warrior_id
+              Case PROCESS_1
+                warrior_start_position1 = load_point + i
+                Return
+              Case PROCESS_2
+                warrior_start_position2 = load_point + i
+                Return
+            End Select
             End If
           End If
           i += 1  '
@@ -204,7 +247,7 @@ Public Sub ClearCore()
   core_cell_colour.Resize(max_core_size)
 End
 
-Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As Integer)
+Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As String, warrior_colour As Integer)
   'given a starting point and the code as a string, will segment the code into lines
   'and inject it into the core_memory array
   Dim code_lines As String[]
@@ -214,7 +257,7 @@ Public Sub LoadWarrior(load_point As Integer, code As String, warrior_colour As 
   'if there is an explicit ORG command, then we have to set the warrior execution point to be that
   'We need to figure out if this program has an ORG statement
   'and if it does, to set the start of execution accordingly
-  OrgAddress(code)
+  OrgAddress(warrior_id, code, load_point)
   
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
@@ -422,7 +465,7 @@ Catch
   
   
 End
-Public Sub Preload_Warriors()
+Public Sub PreloadWarriors()
   'preload the warriors last used
   ed1.text = File.Load(Settings["warrior1", "/home/conz/Documents/development/gambas/lmars/warriors/imp.red"])
   ed2.text = File.Load(Settings["warrior2", "/home/conz/Documents/development/gambas/lmars/warriors/dwarf.red"])
@@ -764,7 +807,7 @@ End
 Public Sub Form_Open()
   
   Resize_me
-  Preload_Warriors
+  PreloadWarriors
    
 
 End
@@ -813,18 +856,18 @@ ClearCore
 ToolBarRunMode(True)
 
 'select the random position of warrior 1
-warrior_start_position1 = Int(Rnd(0, 7800))
-warrior_start_position1 = 1
+warrior_load_position1 = Int(Rnd(0, 7800))
+warrior_load_position1 = 1
 
 'Message(Str$(start_position))
-LoadWarrior(warrior_start_position1, ed1.text, Color.Green)
+LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
-warrior_start_position2 = Int(Rnd(0, 7800))
-warrior_start_position2 = 92
+warrior_load_position2 = Int(Rnd(0, 7800))
+warrior_load_position2 = 92
 
 'Message(Str$(start_position))
-LoadWarrior(warrior_start_position2, ed2.text, Color.Magenta)
+LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, Color.Magenta)
 
 Timer1.Enabled = True
 
