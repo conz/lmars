@@ -37,7 +37,7 @@
     }
     { tbStop ToolButton
       MoveScaled(72,2,10,4)
-      Text = ("Run")
+      Text = ("Stop")
       Picture = Picture["icon:/32/stop"]
     }
     { tbSave1 ToolButton
