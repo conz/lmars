@@ -270,8 +270,13 @@ Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As Str
       If code_line = I_END Then Break
       core_memory[load_point + i] = Trim$(code_line)
       core_cell_colour[load_point + i] = warrior_colour
-      Print "Code at " & Str$(load_point + i)
+      'Print "Code at " & Str$(load_point + i)
       i += 1
+      If load_point + i > max_core_size Then 
+        'We've reached the end of the core! Reset the values so the next instruction is returned to the beginning of the core
+        load_point = 1
+        i = 0
+      End If
     End If
   Next
   
@@ -283,8 +288,8 @@ End
 
 
 Public Sub DrawCore()
-  ' 'paints the drawing area with the contents of the core memory
-  ' 'use this var for our loop counter
+  'Paints the drawing area with the contents of the core memory
+  'use this var for our loop counter
   Dim counter As Integer
   Dim i, j, k As Integer
   Dim x1, y1, x2, y2 As Integer
@@ -303,14 +308,16 @@ Public Sub DrawCore()
   stepy = (y2 - y1) / horizontal_lines + 1
   
   For i = 1 To vertical_lines
-    Draw.Line(x1 + Int(i * stepx), y1, x1 + Int(i * stepx), y2)
+    Draw.Line(x1 + Int((i - 1) * stepx), y1, x1 + Int((i - 1) * stepx), y2)
+    'Print "i= " & i, "X= " & Int((i - 1) * stepx)
     counter += 1      
   Next
   'Print counter 
   grid_cells_x = i 'Set the number of grid cells in the horizontal length
   
   For j = 1 To horizontal_lines
-    Draw.Line(x1, y1 + Int(j * stepy), x2, y1 + Int(j * stepy))      
+    Draw.Line(x1, y1 + Int((j - 1) * stepy), x2, y1 + Int((j - 1) * stepy))
+    'Print "i= " & i, "j= " & j, "cursor_pos= " & cursor_pos, "X= " & Int(stepx * (i - 1))      
     counter += 1  
   Next
   'Print counter
@@ -320,8 +327,8 @@ Public Sub DrawCore()
   'we now paint in the programs as they appear in the core array
   Draw.FillStyle = Fill.Solid
   
-  For i = 1 To vertical_lines
-     For j = 1 To horizontal_lines
+  For j = 1 To horizontal_lines
+     For i = 1 To vertical_lines
       cursor_pos = i + (j - 1) * vertical_lines
       If (cursor_pos > 0) And (cursor_pos < max_core_size) Then
         'Print core_memory[cursor_pos]
@@ -329,7 +336,7 @@ Public Sub DrawCore()
           Draw.Foreground = core_cell_colour[cursor_pos]
           Draw.Rect(Int(stepx * (i - 1)), Int(stepy * (j - 1)), Int(stepx), Int(stepy))
           'Print i - 1, j - 1, cursor_pos
-          Print Int(stepx * (i - 1))
+          Print "i= " & i, "j= " & j, "cursor_pos= " & cursor_pos, "X= " & Int(stepx * (i - 1))
         Endif
       Endif     
      Next
@@ -396,13 +403,15 @@ Public Sub PeekCore()
   Dim core_cell_contents As String
   
   'given an x and y position on the drawing area, can we determine which cell that falls into?
-  stepx = DrawingArea1.Width / vertical_lines
-  stepy = DrawingArea1.Height / horizontal_lines
+  stepx = DrawingArea1.Width / vertical_lines + 1
+  stepy = DrawingArea1.Height / horizontal_lines + 1
   'the cell number maps into the core_memory as x*91 + 88
-  x = (Mouse.x / stepx)
+  Print stepx, stepy
+  
+  x = (Mouse.x / stepx) + 1
   y = (Mouse.y / stepy)
   cursor_pos = x + y * vertical_lines
-  'Print x, y, cursor_pos
+  Print x, y, cursor_pos
   
   
   If (cursor_pos > 0) And (cursor_pos <= max_core_size) Then
@@ -508,9 +517,17 @@ Public Sub Processing()
     Case PROCESS_1
       cpu1() 'execute the code
       ip_table1[ip_table_index1] = ip_table1[ip_table_index1] + 1 'incrememnt the instruction pointer for this process
+      If ip_table1[ip_table_index1] > max_core_size
+        'We've reached the end of the core! Reset the values so the next instruction is returned to the beginning of the core
+        ip_table1[ip_table_index1] = 1
+      Endif
     Case PROCESS_2
-      'cpu2(process_2, core_memory[ip_table1[ip_table_index2]])
+      'cpu2() 'execute the code
       'ip_table1[ip_table_index2] = ip_table1[ip_table_index2] + 1 'incremement the instruction pointer for this process
+      'If ip_table2[ip_table_index2] > max_core_size
+        'We've reached the end of the core! Reset the values so the next instruction is returned to the beginning of the core
+      '  ip_table2[ip_table_index2] = 1
+      'Endif
       
   End Select
   
@@ -857,15 +874,15 @@ ClearCore
 ToolBarRunMode(True)
 
 'select the random position of warrior 1
-warrior_load_position1 = Int(Rnd(0, 7800))
-warrior_load_position1 = 10
+warrior_load_position1 = Int(Rnd(0, 8000))
+'warrior_load_position1 = 89
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
-warrior_load_position2 = Int(Rnd(0, 7800))
-warrior_load_position2 = 14
+warrior_load_position2 = Int(Rnd(0, 8000))
+'warrior_load_position2 = 190
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, Color.Magenta)
