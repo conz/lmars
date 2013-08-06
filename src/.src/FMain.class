@@ -538,13 +538,29 @@ Public Sub cpu1()
   'This is the routine which executes the code in the array
   Dim sOpcode, sOpands, sDataA, sDataB As String
   Dim nOpcode, nOpands As Integer
-  Dim instruction As String
+  Dim instruction, sIsLabel As String
   
   instruction = core_memory[ip_table1[ip_table_index1]]
   'first, we remove any comments
   If InStr(instruction, ";") > 0 Then
     instruction = Trim$(Left$(instruction, InStr(instruction, ";") - 1))
   Endif
+  
+  'We need to take care of entries which are not commands
+  'Let's firstly look for labels, which will be strings at the start of the line, followed by whitespace
+  'in a form like this: label <opcode>
+  'or like this: label: <opcode>
+  nOpcode = InStr(instruction, " ") - 1
+  If nOpcode > 0 Then
+    sIsLabel = Lower$(Left$(instruction, nOpcode))
+    If IsOpCode(sIsLabel) = False Then
+      'We're here because we've found the label in the right position, i.e, at the start
+      'we have to deal with the label
+      '
+      
+    End If
+  End If
+  
   'split the instruction string
   'find the opcode boundary.
   nOpcode = InStr(instruction, " ") - 1
@@ -596,6 +612,7 @@ Public Sub cpu1()
     Case I_LDP 
     Case I_STP 
     Case I_NOP  
+
         
   End Select
   
@@ -608,6 +625,54 @@ End
  '==========================================================
  'You can use the code as u like in your projects but please
  'give credit where credit is due :)
+Public Sub IsOpCode(instruction As String) As Boolean
+  'We check to see if this is an actual opcode
+  'if not, return fals
+  Select Case instruction
+    Case I_DAT
+      Return True
+    Case I_MOV
+      Return True
+    Case I_ADD
+      Return True
+    Case I_SUB 
+      Return True
+    Case I_MUL 
+      Return True
+    Case I_DIV 
+      Return True
+    Case I_MOD 
+      Return True
+    Case I_JMP 
+      Return True
+    Case I_JMZ 
+      Return True
+    Case I_JMN 
+      Return True
+    Case I_DJN 
+      Return True
+    Case I_SPL 
+      Return True
+    Case I_CMP 
+      Return True
+    Case I_SEQ 
+      Return True
+    Case I_SNE 
+      Return True
+    Case I_SLT 
+      Return True
+    Case I_LDP 
+      Return True
+    Case I_STP 
+      Return True
+    Case I_NOP  
+      Return True
+    Case Else
+      Return False
+        
+  End Select
+  Return 
+End
 
 
  Public Function parse(expr As String) As Float

@@ -1,9 +1,11 @@
+[Bookmarks]
+FMain=[]
+
 [Breakpoints]
 Count=0
 
 [DebugWindow]
-Count=1
-DebugWindow[1]="core_memory"
+Count=0
 
 [DebugWindow/DrawingArea1]
 Geometry=[0,25,210,468]
@@ -32,7 +34,7 @@ Geometry=[-8,290,240,240]
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:329.44"
+File[2]=".src/FMain.class:560.10"
 Count=2
 
 [Watches]
