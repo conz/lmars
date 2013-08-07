@@ -252,7 +252,7 @@ Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As Str
   'and inject it into the core_memory array
   Dim code_lines As String[]
   Dim code_line As String
-  Dim i As Integer
+  Dim i, nNumLines As Integer
   
   'if there is an explicit ORG command, then we have to set the warrior execution point to be that
   'We need to figure out if this program has an ORG statement
@@ -260,6 +260,8 @@ Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As Str
   OrgAddress(warrior_id, code, load_point)
   
   code_lines = Split(code, "\n")
+  nNumLines = code_lines.Length
+  
   For Each code_line In code_lines
     'Let's strip out comments
     code_line = Lower$(StripComments(code_line))
@@ -280,7 +282,9 @@ Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As Str
     End If
   Next
   
-  'DrawCore
+  'we've got the code loaded, let's process the labels, removing them and swapping in
+  'the correct relative addressing
+  ProcessLabels(warrior_id, nNumLines)
   
 End
 
@@ -406,12 +410,12 @@ Public Sub PeekCore()
   stepx = DrawingArea1.Width / vertical_lines + 1
   stepy = DrawingArea1.Height / horizontal_lines + 1
   'the cell number maps into the core_memory as x*91 + 88
-  Print stepx, stepy
+  'Print stepx, stepy
   
   x = (Mouse.x / stepx) + 1
   y = (Mouse.y / stepy)
   cursor_pos = x + y * vertical_lines
-  Print x, y, cursor_pos
+  'Print x, y, cursor_pos
   
   
   If (cursor_pos > 0) And (cursor_pos <= max_core_size) Then
@@ -533,6 +537,44 @@ Public Sub Processing()
   
   
 End
+Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
+  'We need to process any labels present in the core
+  'We scan the total core, finding each label
+  'we note its address, then we remove it from the core, 
+  'and at each point where that label is referenced, we replace the label
+  'with that labels actual (relative) address 
+  Dim sOpcode, sOpands, sDataA, sDataB As String
+  Dim nOpcode, nOpands, i, nAddress As Integer
+  Dim instruction, sIsLabel As String
+  
+  Select Case warrior_id
+    Case PROCESS_1
+      nAddress = warrior_start_position1
+    Case PROCESS_2
+      nAddress = warrior_start_position2 
+  End Select
+  
+  For i = 1 To nNumLines
+    instruction = core_memory[nAddress]
+   
+    'Let's firstly look for labels, which will be strings at the start of the line, followed by whitespace
+    'in a form like this: label <opcode>
+    'or like this: label: <opcode>
+    nOpcode = InStr(instruction, " ") - 1
+    If nOpcode > 0 Then
+      sIsLabel = Lower$(Left$(instruction, nOpcode))
+      If IsOpCode(sIsLabel) = False Then
+        'We're here because we've found the label in the right position, i.e, at the start
+        'we have to deal with the label, which we do by getting just the label, then processing each
+        '
+        '
+      
+      End If
+    End If
+  Next
+  
+End
+
 
 Public Sub cpu1()
   'This is the routine which executes the code in the array
@@ -546,20 +588,7 @@ Public Sub cpu1()
     instruction = Trim$(Left$(instruction, InStr(instruction, ";") - 1))
   Endif
   
-  'We need to take care of entries which are not commands
-  'Let's firstly look for labels, which will be strings at the start of the line, followed by whitespace
-  'in a form like this: label <opcode>
-  'or like this: label: <opcode>
-  nOpcode = InStr(instruction, " ") - 1
-  If nOpcode > 0 Then
-    sIsLabel = Lower$(Left$(instruction, nOpcode))
-    If IsOpCode(sIsLabel) = False Then
-      'We're here because we've found the label in the right position, i.e, at the start
-      'we have to deal with the label
-      '
-      
-    End If
-  End If
+
   
   'split the instruction string
   'find the opcode boundary.
@@ -940,7 +969,8 @@ ToolBarRunMode(True)
 
 'select the random position of warrior 1
 warrior_load_position1 = Int(Rnd(0, 8000))
-'warrior_load_position1 = 89
+warrior_start_position1 = warrior_load_position1
+Print "warrior_load_position1 " & warrior_start_position1
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
@@ -948,6 +978,9 @@ LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
 'select the random position of warrior 2
 warrior_load_position2 = Int(Rnd(0, 8000))
 'warrior_load_position2 = 190
+warrior_start_position2 = warrior_load_position2
+
+Print "warrior_load_position2 " & warrior_start_position2
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, Color.Magenta)
