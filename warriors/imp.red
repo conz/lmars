@@ -4,5 +4,5 @@
 
         org     imp
 
-imp:    mov.i   imp, imp+1
+imp:    mov   imp, imp+1
         end

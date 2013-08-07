@@ -544,7 +544,7 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   'and at each point where that label is referenced, we replace the label
   'with that labels actual (relative) address 
   Dim sOpcode, sOpands, sDataA, sDataB As String
-  Dim nOpcode, nOpands, i, j, nAddress As Integer
+  Dim nOpcode, nOpands, i, j, nAddress, nLabelPos As Integer
   Dim instruction, sIsLabel As String
   
   Select Case warrior_id
@@ -568,10 +568,24 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
         'we have to deal with the label, which we do by getting just the label, then processing each
         'We firstly have to note which relative instruction this label falls on, for use later on
         'and we have to remove this label
+        nLabelPos = InStr(instruction, sIsLabel)
+        'we know that this line has this label, as we just extracted it from this line, so there's no need to 
+        'check if we've found this label.
+        core_memory[nAddress + i] = Trim(Mid(instruction, nLabelPos + Len(sIsLabel)))
+        
         'Print "We've found a label: " & instruction & " -- " & sIsLabel
         For j = 0 To nNumLines - 1
           'We need to iterate through the warrior code once more, this time finding each instance of the
           'label, and replacing it with a relative reference
+           instruction = core_memory[nAddress + j]
+           'We have the instuction line, let's see if it has the label
+           nLabelPos = InStr(instruction, sIsLabel)
+           If nLabelPos > 0
+            'we know that this line has this label, as we just extracted it from this line, so there's no need to 
+            'check if we've found this label.
+            core_memory[nAddress + i] = Trim(Left(instruction, nLabelPos) & Mid(instruction, nLabelPos + Len(sIsLabel)))         
+               
+           Endif
         Next
       End If
     End If
@@ -699,6 +713,8 @@ Public Sub IsOpCode(instruction As String) As Boolean
     Case I_STP 
       Return True
     Case I_NOP  
+      Return True
+    Case I_ORG
       Return True
     Case I_END
       Return True
