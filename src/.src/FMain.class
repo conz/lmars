@@ -340,7 +340,7 @@ Public Sub DrawCore()
           Draw.Foreground = core_cell_colour[cursor_pos]
           Draw.Rect(Int(stepx * (i - 1)), Int(stepy * (j - 1)), Int(stepx), Int(stepy))
           'Print i - 1, j - 1, cursor_pos
-          Print "i= " & i, "j= " & j, "cursor_pos= " & cursor_pos, "X= " & Int(stepx * (i - 1))
+          'Print "i= " & i, "j= " & j, "cursor_pos= " & cursor_pos, "X= " & Int(stepx * (i - 1))
         Endif
       Endif     
      Next
@@ -544,18 +544,18 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   'and at each point where that label is referenced, we replace the label
   'with that labels actual (relative) address 
   Dim sOpcode, sOpands, sDataA, sDataB As String
-  Dim nOpcode, nOpands, i, nAddress As Integer
+  Dim nOpcode, nOpands, i, j, nAddress As Integer
   Dim instruction, sIsLabel As String
   
   Select Case warrior_id
     Case PROCESS_1
-      nAddress = warrior_start_position1
+      nAddress = warrior_load_position1
     Case PROCESS_2
-      nAddress = warrior_start_position2 
+      nAddress = warrior_load_position2 
   End Select
   
-  For i = 1 To nNumLines
-    instruction = core_memory[nAddress]
+  For i = 0 To nNumLines - 1
+    instruction = core_memory[nAddress + i]
    
     'Let's firstly look for labels, which will be strings at the start of the line, followed by whitespace
     'in a form like this: label <opcode>
@@ -566,9 +566,13 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
       If IsOpCode(sIsLabel) = False Then
         'We're here because we've found the label in the right position, i.e, at the start
         'we have to deal with the label, which we do by getting just the label, then processing each
-        '
-        '
-      
+        'We firstly have to note which relative instruction this label falls on, for use later on
+        'and we have to remove this label
+        'Print "We've found a label: " & instruction & " -- " & sIsLabel
+        For j = 0 To nNumLines - 1
+          'We need to iterate through the warrior code once more, this time finding each instance of the
+          'label, and replacing it with a relative reference
+        Next
       End If
     End If
   Next
@@ -695,6 +699,8 @@ Public Sub IsOpCode(instruction As String) As Boolean
     Case I_STP 
       Return True
     Case I_NOP  
+      Return True
+    Case I_END
       Return True
     Case Else
       Return False
