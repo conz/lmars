@@ -344,6 +344,9 @@ Public Sub DrawCore()
           'Print i - 1, j - 1, cursor_pos
           'Print "i= " & i, "j= " & j, "cursor_pos= " & cursor_pos, "X= " & Int(stepx * (i - 1))
         Endif
+      Else
+        Draw.Foreground = Color.DarkGray
+        Draw.Rect(Int(stepx * i), Int(stepy * j), Int(stepx), Int(stepy))
       Endif
       counter += 1   
     Next
@@ -421,11 +424,13 @@ Public Sub PeekCore()
   'Print x, y, cursor_pos
    'Print "stepx, stepy " & Str(stepx) & ", " & Str(stepy) 
   
-  If (cursor_pos >= 0) And (cursor_pos <= max_core_size) Then
+  If (cursor_pos >= 0) And (cursor_pos < max_core_size) Then
     'Print x, y, cursor_pos, core_memory[cursor_pos]  
     core_cell_contents = core_memory[cursor_pos]
     If core_cell_contents = "" Then core_cell_contents = "Dat #0, #0" Else core_cell_contents = core_memory[cursor_pos]
     DrawingArea1.tooltip = "Memory Address: " & Str$(cursor_pos) & " :: " & core_cell_contents
+  Else
+    DrawingArea1.tooltip = "Memory Address: Out of Bounds"
   End If
   
 End
@@ -1002,7 +1007,7 @@ ToolBarRunMode(True)
 
 'select the random position of warrior 1
 warrior_load_position1 = Int(Rnd(0, 8000))
-warrior_load_position1 = 0
+warrior_load_position1 = 7920
 warrior_start_position1 = warrior_load_position1
 Print "warrior_load_position1 " & warrior_start_position1
 
@@ -1011,7 +1016,7 @@ LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
 warrior_load_position2 = Int(Rnd(0, 8000))
-warrior_load_position2 = 5
+warrior_load_position2 = 7925
 warrior_start_position2 = warrior_load_position2
 
 Print "warrior_load_position2 " & warrior_start_position2

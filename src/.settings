@@ -19,6 +19,9 @@ Geometry=[0,25,210,210]
 [DebugWindow/code_lines2]
 Geometry=[0,25,240,240]
 
+[DebugWindow/core_cell_colour]
+Geometry=[0,25,210,210]
+
 [DebugWindow/core_memory]
 Geometry=[2,25,240,304]
 
@@ -31,7 +34,7 @@ Geometry=[-8,290,240,240]
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:560.39"
+File[2]=".src/FMain.class:350.21"
 Count=2
 
 [Watches]
