@@ -556,7 +556,7 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   
   For i = 0 To nNumLines - 1
     instruction = core_memory[nAddress + i]
-   
+    'Print instruction
     'Let's firstly look for labels, which will be strings at the start of the line, followed by whitespace
     'in a form like this: label <opcode>
     'or like this: label: <opcode>
@@ -570,20 +570,28 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
         'and we have to remove this label
         nLabelPos = InStr(instruction, sIsLabel)
         'we know that this line has this label, as we just extracted it from this line, so there's no need to 
-        'check if we've found this label.
+        'check if we've found this label. We need to remove this label.
         core_memory[nAddress + i] = Trim(Mid(instruction, nLabelPos + Len(sIsLabel)))
         
         'Print "We've found a label: " & instruction & " -- " & sIsLabel
+        'As we've found the label, let's trim it of any colons(':')
+        If InStr(sIsLabel, ":") > 1 Then sIsLabel = Trim(Left(sIsLabel, Len(sIsLabel) - 1))
         For j = 0 To nNumLines - 1
           'We need to iterate through the warrior code once more, this time finding each instance of the
           'label, and replacing it with a relative reference
+          'We don't have to worry if this reference is in an ORG or an END statement; we can replace both of these, too.
+          
            instruction = core_memory[nAddress + j]
+           Print instruction
            'We have the instuction line, let's see if it has the label
            nLabelPos = InStr(instruction, sIsLabel)
            If nLabelPos > 0
             'we know that this line has this label, as we just extracted it from this line, so there's no need to 
             'check if we've found this label.
-            core_memory[nAddress + i] = Trim(Left(instruction, nLabelPos) & Mid(instruction, nLabelPos + Len(sIsLabel)))         
+            'We can compute its relative position by comparing the difference between i & j counters.
+            core_memory[nAddress + j] = Trim(Replace(instruction, sIsLabel, Str(i - j)))
+            Print core_memory[nAddress + j]
+            'core_memory[nAddress + i] = Trim(Left(instruction, nLabelPos - 1) & Str(i - j) & Mid(instruction, nLabelPos + Len(sIsLabel)))         
                
            Endif
         Next
