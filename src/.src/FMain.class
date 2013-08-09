@@ -289,8 +289,6 @@ Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As Str
 End
 
 
-
-
 Public Sub DrawCore()
   'Paints the drawing area with the contents of the core memory
   'use this var for our loop counter
@@ -308,7 +306,7 @@ Public Sub DrawCore()
   y1 = 0
   x2 = DrawingArea1.Width
   y2 = DrawingArea1.Height
-  Print "DrawingArea1.Height " & Str(y2) & " DrawingArea1.Width= " & Str(DrawingArea1.Width)
+  'Print "DrawingArea1.Height " & Str(y2) & " DrawingArea1.Width= " & Str(DrawingArea1.Width)
   stepx = (x2 - x1) / vertical_lines
   stepy = (y2 - y1) / horizontal_lines
   
@@ -318,7 +316,7 @@ Public Sub DrawCore()
     'counter += 1      
   Next
   'Print counter 
-  grid_cells_x = i 'Set the number of grid cells in the horizontal length
+  'grid_cells_x = i 'Set the number of grid cells in the horizontal length
   
   For j = 0 To horizontal_lines - 1
     Draw.Line(x1, y1 + Int(j * stepy), x2, y1 + Int(j * stepy))
@@ -326,8 +324,8 @@ Public Sub DrawCore()
     'counter += 1  
   Next
   'Print counter
-  grid_cells_y = j 'Set the number of grid cells in the vertical length
-  Print "stepx, stepy " & Str(stepx) & ", " & Str(stepy) & ". x, y " & Int(stepx * (i - 1)) & ", " & Int(stepy * (j - 1))
+  'grid_cells_y = j 'Set the number of grid cells in the vertical length
+  'Print "stepx, stepy " & Str(stepx) & ", " & Str(stepy) & ". x, y " & Int(stepx * (i - 1)) & ", " & Int(stepy * (j - 1))
   'Print grid_cells_x, grid_cells_y
   'we now paint in the programs as they appear in the core array
   Draw.FillStyle = Fill.Solid
@@ -351,7 +349,7 @@ Public Sub DrawCore()
       counter += 1   
     Next
   Next
-  Print "Counter " & Str(counter) & ". grid_cells_y " & Str(grid_cells_y) & ". x, y " & Int(stepx * (i - 1)) & ", " & Int(stepy * (j - 1))
+  'Print "Counter " & Str(counter) & ". grid_cells_y " & Str(grid_cells_y) & ". x, y " & Int(stepx * (i - 1)) & ", " & Int(stepy * (j - 1))
   Draw.End
   
 End
@@ -529,16 +527,16 @@ Public Sub Processing()
     Case PROCESS_1
       cpu1() 'execute the code
       ip_table1[ip_table_index1] = ip_table1[ip_table_index1] + 1 'incrememnt the instruction pointer for this process
-      If ip_table1[ip_table_index1] > max_core_size
+      If ip_table1[ip_table_index1] = max_core_size
         'We've reached the end of the core! Reset the values so the next instruction is returned to the beginning of the core
-        ip_table1[ip_table_index1] = 1
+        ip_table1[ip_table_index1] = 0
       Endif
     Case PROCESS_2
       'cpu2() 'execute the code
       'ip_table1[ip_table_index2] = ip_table1[ip_table_index2] + 1 'incremement the instruction pointer for this process
       'If ip_table2[ip_table_index2] > max_core_size
         'We've reached the end of the core! Reset the values so the next instruction is returned to the beginning of the core
-      '  ip_table2[ip_table_index2] = 1
+      '  ip_table2[ip_table_index2] = 0
       'Endif
       
   End Select
@@ -622,8 +620,32 @@ Public Sub cpu1()
     instruction = Trim$(Left$(instruction, InStr(instruction, ";") - 1))
   Endif
   
-
-  
+  'examples of each kind of instruction, from
+  'http://en.wikibooks.org/wiki/Core_War/Redcode
+  'DAT A,B  Data; executing this instruction kills the task.
+  ' MOV #A, B If one Is Immediate, copied immediate number To B.
+  ' MOV A, B Moves instruction at A To B.However, If A Is Immediate, copies the immediate number To B.
+  ' ADD A, B Adds A To B.
+  ' Sub A, B Subtracts A From B.
+  ' MUL A, B Multiplies A And B To produce the result.
+  ' Div A, B Divides B by A.Division by zero kills the process.
+  ' Mod A, B Modulus Of B In A.Division by zero kills the process.
+  ' JMP A, B Jumpts To A.
+  ' JMZ A B If * B Is 0, jumps To A.
+  ' JMN A, B If * B Is Not 0, jumps To A.
+  ' DJN A, B Decreases * b.If non zero, jumps To A.
+  ' CMP A, B If * a == * B( Or If immediate, #A == * B), skips an instruction
+  ' SPL A, B Creates a New Task, which starts at B.Newer task starts first.
+  ' SEQ A, B Skips past the Next instruction Is A And B are equal.
+  ' SNE A, B Skips past the Next instruction Is A And B are Not - equal.
+  ' SLT A, B Skips If * A < * B.(88 only)
+  ' XCH A, B At A, swaps A And B.(extended only)
+  ' PCT A, B At A, Protects operands From changing, Until an instruction Is Written To that address.
+  ' NOP A, B Has no special effect(although operands are still evaluates.)
+  ' STP A, B Stores A into P - Space at location specified by B.
+  ' LDP A, B Retrieves data From P - Space at location specified by B into A.
+  ' 
+  ' 
   'split the instruction string
   'find the opcode boundary.
   nOpcode = InStr(instruction, " ") - 1
@@ -646,6 +668,26 @@ Public Sub cpu1()
     'Timer1.enabled = False
   Endif
   
+  'Address modes[edit]
+  'from http://en.wikibooks.org/wiki/Core_War/Redcode
+  ' Each opcode listed above contains two registers.These registers are composed Of both a number And an address mode: #Immediate.The number Is Directly In the opcode.
+  ' $( Or none)Direct.The opcode points To a cell relative To the current cell.
+  ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
+  ' < Indirect, but the intermediate register Is Decreased before use.
+  ' > Indirect, the intermediate register Is Increased after use.
+  ' * A - field Indirect.The opcode points To a cell relative To the current cell.That cell 's A value is added to the indirect pointer, to provide the target.
+  ' {  A-field Indirect, but the intermediate register is decreased before use.
+  ' }A - field Indirect, the intermediate register Is Increased after use.  
+  
+  
+  'Instruction modifiers[edit].A  A -> A
+  ' .B B - > B
+  ' .AB A - > B
+  ' .BA B - > A
+  ' .F A - > A And B - > B
+  ' .X A - > B And B - > A
+  ' .I Entire instruction.
+  ' 
   Select Case sOpcode
     Case I_DAT
       'the process has executed an illegal instruction
@@ -1006,20 +1048,19 @@ ClearCore
 ToolBarRunMode(True)
 
 'select the random position of warrior 1
-warrior_load_position1 = Int(Rnd(0, 8000))
-warrior_load_position1 = 7920
+warrior_load_position1 = Int(Rnd(0, max_core_size - 1))
+'warrior_load_position1 = 7920
 warrior_start_position1 = warrior_load_position1
-Print "warrior_load_position1 " & warrior_start_position1
+'Print "warrior_load_position1 " & warrior_start_position1
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
-warrior_load_position2 = Int(Rnd(0, 8000))
-warrior_load_position2 = 7925
+warrior_load_position2 = Int(Rnd(0, max_core_size - 1))
+'warrior_load_position2 = 7925
 warrior_start_position2 = warrior_load_position2
-
-Print "warrior_load_position2 " & warrior_start_position2
+'Print "warrior_load_position2 " & warrior_start_position2
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, Color.Magenta)
