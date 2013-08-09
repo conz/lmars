@@ -700,6 +700,7 @@ Public Sub cpu1()
     Case I_MOV
       'we found a MOV instruction. We have to copy the contets of one address to another.
       
+      'core_memory[ip_table1[ip_table_index1]] = GetAddressMode(sDataA, ip_table1[ip_table_index1])
     Case I_ADD
     Case I_SUB 
     Case I_MUL 
