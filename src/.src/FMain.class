@@ -607,6 +607,43 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   
 End
 
+Public Sub GetOpCodeValue(sOpCode As String, nAddress As Integer) As String
+  'Given an opcode and a memory location, figure out what the data is that
+  'results, then return this
+  '
+  '
+  
+  'Address modes
+  'from http://en.wikibooks.org/wiki/Core_War/Redcode
+  ' Each opcode listed above contains two registers.These registers are composed Of both a number And an address mode: 
+  ' #Immediate.The number Is Directly In the opcode.
+  ' $( Or none)Direct.The opcode points To a cell relative To the current cell.
+  ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
+  ' < Indirect, but the intermediate register Is Decreased before use.
+  ' > Indirect, the intermediate register Is Increased after use.
+  ' * A - field Indirect.The opcode points To a cell relative To the current cell.That cell 's A value is added to the indirect pointer, to provide the target.
+  ' {  A-field Indirect, but the intermediate register is decreased before use.
+  ' }A - field Indirect, the intermediate register Is Increased after use. 
+  
+  Print sOpCode, nAddress
+  Select Case Trim$(Left(sOpCode, 1))
+    Case "#"
+      ' #Immediate.The number Is Directly In the opcode.
+      
+    Case "@"
+      ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
+      
+    Case "<"  
+      ' < Indirect, but the intermediate register Is Decreased before use.
+    Case ">"
+      ' > Indirect, the intermediate register Is Increased after use.
+    Case "*"
+  
+      
+      
+  End Select
+End
+
 
 Public Sub cpu1()
   'This is the routine which executes the code in the array
@@ -668,17 +705,6 @@ Public Sub cpu1()
     'Timer1.enabled = False
   Endif
   
-  'Address modes[edit]
-  'from http://en.wikibooks.org/wiki/Core_War/Redcode
-  ' Each opcode listed above contains two registers.These registers are composed Of both a number And an address mode: #Immediate.The number Is Directly In the opcode.
-  ' $( Or none)Direct.The opcode points To a cell relative To the current cell.
-  ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
-  ' < Indirect, but the intermediate register Is Decreased before use.
-  ' > Indirect, the intermediate register Is Increased after use.
-  ' * A - field Indirect.The opcode points To a cell relative To the current cell.That cell 's A value is added to the indirect pointer, to provide the target.
-  ' {  A-field Indirect, but the intermediate register is decreased before use.
-  ' }A - field Indirect, the intermediate register Is Increased after use.  
-  
   
   'Instruction modifiers[edit].A  A -> A
   ' .B B - > B
@@ -698,9 +724,10 @@ Public Sub cpu1()
       
       
     Case I_MOV
-      'we found a MOV instruction. We have to copy the contets of one address to another.
+      'we found a MOV instruction. We have to copy the contents of one address to another.
       
-      'core_memory[ip_table1[ip_table_index1]] = GetAddressMode(sDataA, ip_table1[ip_table_index1])
+      core_memory[ip_table1[ip_table_index1]] = GetOpCodeValue(sDataA, ip_table1[ip_table_index1])
+      '
     Case I_ADD
     Case I_SUB 
     Case I_MUL 
@@ -1050,7 +1077,7 @@ ToolBarRunMode(True)
 
 'select the random position of warrior 1
 warrior_load_position1 = Int(Rnd(0, max_core_size - 1))
-'warrior_load_position1 = 7920
+warrior_load_position1 = 0
 warrior_start_position1 = warrior_load_position1
 'Print "warrior_load_position1 " & warrior_start_position1
 
@@ -1059,7 +1086,7 @@ LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
 
 'select the random position of warrior 2
 warrior_load_position2 = Int(Rnd(0, max_core_size - 1))
-'warrior_load_position2 = 7925
+warrior_load_position2 = 5
 warrior_start_position2 = warrior_load_position2
 'Print "warrior_load_position2 " & warrior_start_position2
 
