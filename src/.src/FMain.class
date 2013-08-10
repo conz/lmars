@@ -145,6 +145,8 @@ Public Sub OrgAddress(warrior_id As Integer, code As String, load_point As Integ
     
   code_lines = Split(code, "\n")
   For Each code_line In code_lines
+    'Strip the comments out
+    code_line = Lower$(StripComments(code_line))
     nLabel = InStr(LCase(Trim(code_line)), I_ORG)
     
     If nLabel > 0 Then 'we're assuming code that looks like this:  org imp
@@ -159,6 +161,11 @@ Public Sub OrgAddress(warrior_id As Integer, code As String, load_point As Integ
       code_lines2 = Split(code, "\n")
       For Each code_line2 In code_lines2
         'we rewind the program, and parse each line, now looking for the label we found above
+        '
+        'Strip the comments out
+        code_line2 = Lower$(StripComments(code_line2))
+        nLabel = InStr(LCase(Trim(code_line2)), I_ORG)
+        
         'The format which is acceptable for a label is either: <label>  <command>
         'or: <label>: command
         'so, first we find if the line has the label with colon
@@ -504,7 +511,9 @@ Public Sub Processing()
   If current_process = 0 Then 
     ip_table1.Add(warrior_start_position1)
     ip_table2.Add(warrior_start_position2)
-    current_process = Int(Rnd(1, 3))
+    'current_process = Int(Rnd(1, 3))
+    'For now, let's hardwire current_process
+    current_process = 1
   End If
   
   
@@ -629,6 +638,7 @@ Public Sub GetOpCodeValue(sOpCode As String, nAddress As Integer) As String
   Select Case Trim$(Left(sOpCode, 1))
     Case "#"
       ' #Immediate.The number Is Directly In the opcode.
+      Print "immediate"
       
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
@@ -639,9 +649,14 @@ Public Sub GetOpCodeValue(sOpCode As String, nAddress As Integer) As String
       ' > Indirect, the intermediate register Is Increased after use.
     Case "*"
   
-      
+    Case Else
+      'We are here when we can find none of the above, so that means, assuming either $ or nothing, which is Direct
+      'The opcode points To a cell relative To the current cell.
+       
+       Return core_memory[nAddress + Eval(sOpCode)]
       
   End Select
+  
 End
 
 

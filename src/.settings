@@ -1,10 +1,14 @@
 [Breakpoints]
-Breakpoint[1]="FMain.687"
-Breakpoint[2]="FMain.716"
-Count=2
+Breakpoint[1]="FMain.146"
+Breakpoint[2]="FMain.185"
+Breakpoint[3]="FMain.655"
+Breakpoint[4]="FMain.731"
+Breakpoint[5]="FMain.743"
+Count=5
 
 [DebugWindow]
-Count=0
+Count=1
+DebugWindow[1]="code_lines"
 
 [DebugWindow/DrawingArea1]
 Geometry=[0,25,210,468]
@@ -16,6 +20,9 @@ Geometry=[0,25,240,240]
 Geometry=[0,25,210,210]
 
 [DebugWindow/[ip_table1[ip_table_index2]]]
+Geometry=[0,25,210,210]
+
+[DebugWindow/code_lines]
 Geometry=[0,25,210,210]
 
 [DebugWindow/code_lines2]
@@ -36,7 +43,7 @@ Geometry=[-8,290,240,240]
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:639.12"
+File[2]=".src/FMain.class:185.56"
 Count=2
 
 [Watches]
