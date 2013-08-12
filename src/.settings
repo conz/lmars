@@ -1,11 +1,13 @@
+[Bookmarks]
+FMain=[736]
+
 [Breakpoints]
-Breakpoint[1]="FMain.185"
+Breakpoint[1]="FMain.739"
 Count=1
 
 [DebugWindow]
-Count=2
-DebugWindow[1]="code_lines"
-DebugWindow[2]="code_lines2"
+Count=1
+DebugWindow[1]="core_memory"
 
 [DebugWindow/DrawingArea1]
 Geometry=[0,25,210,468]
@@ -26,7 +28,7 @@ Geometry=[0,25,240,240]
 Geometry=[-9,297,240,240]
 
 [DebugWindow/core_cell_colour]
-Geometry=[0,25,210,210]
+Geometry=[0,25,240,240]
 
 [DebugWindow/core_memory]
 Geometry=[2,25,240,304]
@@ -40,7 +42,7 @@ Geometry=[-8,290,240,240]
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:179.44"
+File[2]=".src/FMain.class:744.12"
 Count=2
 
 [Watches]

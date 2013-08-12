@@ -62,6 +62,10 @@ Public Const I_ORG As String = "org"
 Public Const PROCESS_1 As Integer = 1
 Public Const PROCESS_2 As Integer = 2
 
+Public process_1_colour As Integer 
+Public process_2_colour As Integer
+
+
 Public grid_cells_x As Integer
 Public grid_cells_y As Integer
 
@@ -78,30 +82,13 @@ Public ip_table_index1 As Integer 'specifies the current index into the instruct
 Public ip_table_index2 As Integer 'specifies the current index into the instruction pointer table for warrior 2
 
 
-Public Sub SetCellColour(cell As Integer, colour As Integer)
-  'Use this function to set each cell colour which has been written to by a process
-  
-  
-End
-
-Public Sub GetCellColour(cell As Integer, colour As Integer)
-  'Use this function to get the cell colour for a particular cell
- 
-  
+Public Sub SetWarriorCellColour()
+  'Call this routine once, to establish the different warrior cell colours
+  process_1_colour = Color.Green
+  process_2_colour = Color.Magenta
   
 End
 
-Public Sub SetCellContents(cell As Integer, value As String)
-  'Use this function to set the cell contents of a specific cell
-  
-  
-End
-
-Public Sub GetCellContents(cell As Integer, value As String)
-  'Use this function to get the cell contents of a specific cell
-  
-  
-End
 
 Public Function StripComments(sCode As String) As String
   'Given a string, strip out any comments, which are denoted by a semi-colon, until the end of the line
@@ -256,6 +243,7 @@ Public Sub ClearCore()
     
   core_cell_colour.Clear
   core_cell_colour.Resize(max_core_size)
+  
 End
 
 Public Sub LoadWarrior(warrior_id As Integer, load_point As Integer, code As String, warrior_colour As Integer)
@@ -350,7 +338,7 @@ Public Sub DrawCore()
           Draw.Foreground = core_cell_colour[cursor_pos]
           Draw.Rect(Int(stepx * i), Int(stepy * j), Int(stepx), Int(stepy))
           
-          'Print i - 1, j - 1, cursor_pos
+          Print "cursor_pos " & cursor_pos
           'Print "i= " & i, "j= " & j, "cursor_pos= " & cursor_pos, "X= " & Int(stepx * (i - 1))
         Endif
       Else
@@ -498,7 +486,7 @@ Catch
 End
 Public Sub PreloadWarriors()
   'preload the warriors last used
-  ed1.text = File.Load(Settings["warrior1", "/home/conz/Documents/development/gambas/lmars/warriors/imp.red"])
+  ed1.text = File.Load(Settings["warrior1", "/home/conz/Documents/development/gambas/lmars/warriors/test.red"])
   ed2.text = File.Load(Settings["warrior2", "/home/conz/Documents/development/gambas/lmars/warriors/dwarf.red"])
   
 End
@@ -620,7 +608,7 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   
 End
 
-Public Sub ResolveOpAndValue(sOpand As String, nAddress As Integer) As Variant
+Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
   'Given an opand and a memory location, figure out what the data is that
   'results, then return this
   '
@@ -642,7 +630,7 @@ Public Sub ResolveOpAndValue(sOpand As String, nAddress As Integer) As Variant
   Select Case Trim$(Left(sOpand, 1))
     Case "#"
       ' #Immediate.The number Is Directly In the opcode.
-      Print "immediate"
+      Return Eval(Mid(sOpand, 2))
       
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
@@ -657,8 +645,8 @@ Public Sub ResolveOpAndValue(sOpand As String, nAddress As Integer) As Variant
       'We are here when we can find none of the above, so that means, assuming either $ or nothing, which is Direct
       'The opcode points To a cell relative To the current cell.
        
+       'Return core_memory[nAddress + Eval(sOpand)]
        Return (nAddress + Eval(sOpand))
-      
   End Select
   
 End
@@ -669,7 +657,7 @@ Public Sub cpu1()
   Dim sOpcode, sOpands, sOpandA, sOpandB As String
   Dim nOpcode, nOpands As Integer
   Dim instruction, sIsLabel As String
-  Dim nRet As Variant
+  Dim vRet As Variant
   
   instruction = core_memory[ip_table1[ip_table_index1]]
   'first, we remove any comments
@@ -748,8 +736,17 @@ Public Sub cpu1()
       'we first resolve the value of the  sOpandA and shove that value into the addresses resolved by sOpandB
       'sOpandA is the source of the information
       'sOpandB is the destination where the information is to be moved to
-      nRet = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
-      core_memory[nRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
+      vRet = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      If TypeOf(vRet) = gb.Integer Then
+        'current problem here is we're not handling the opand properly. memory is being assigned into memory, rather than a #number into memory
+        core_memory[vRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
+      Else If TypeOf(vRet) = gb.String Then
+        
+      End If
+      
+      'core_memory[vRet] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      
+      core_cell_colour[vRet] = PROCESS_1_COLOUR
       '
     Case I_ADD
     Case I_SUB 
@@ -1100,6 +1097,7 @@ If tbPause.enabled = True Then
 Endif
 
 ClearCore
+SetWarriorCellColour
 ToolBarRunMode(True)
 
 'select the random position of warrior 1
@@ -1109,7 +1107,7 @@ warrior_start_position1 = warrior_load_position1
 'Print "warrior_load_position1 " & warrior_start_position1
 
 'Message(Str$(start_position))
-LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, Color.Green)
+LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, PROCESS_1_COLOUR)
 
 'select the random position of warrior 2
 warrior_load_position2 = Int(Rnd(0, max_core_size - 1))
@@ -1118,7 +1116,7 @@ warrior_start_position2 = warrior_load_position2
 'Print "warrior_load_position2 " & warrior_start_position2
 
 'Message(Str$(start_position))
-LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, Color.Magenta)
+LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, PROCESS_2_COLOUR)
 
 Timer1.Enabled = True
 

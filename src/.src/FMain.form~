@@ -47,7 +47,7 @@
     }
     { tbSave2 ToolButton
       MoveScaled(103,2,12,4)
-      Text = ("Save 1")
+      Text = ("Save 2")
       Picture = Picture["icon:/32/save"]
     }
     { Separator1 Separator
@@ -81,5 +81,6 @@
   }
   { Timer1 #Timer
     #MoveScaled(127,11)
+    Delay = 10
   }
 }

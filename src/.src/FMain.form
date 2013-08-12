@@ -80,6 +80,6 @@
     Highlight = Highlight.Custom
   }
   { Timer1 #Timer
-    #MoveScaled(127,11)
+    #MoveScaled(84,7)
   }
 }
