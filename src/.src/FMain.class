@@ -164,37 +164,41 @@ Public Sub OrgAddress(warrior_id As Integer, code As String, load_point As Integ
         '
         'Strip the comments out
         code_line2 = Lower$(StripComments(code_line2))
-        nLabel = InStr(LCase(Trim(code_line2)), I_ORG)
-        
-        'The format which is acceptable for a label is either: <label>  <command>
-        'or: <label>: command
-        'so, first we find if the line has the label with colon
-        nLabel = InStr(LTrim(LCase(code_line2)), sLabel & ":")
+        If Len(Trim(code_line2)) > 0 Then
+                  
+          'nLabel = InStr(LCase(Trim(code_line2)), I_ORG) 'This seems to be orphaned code
+          '
+          'The format which is acceptable for a label is either: 
+          '    <label>  <command>
+          'or: <label>: command
+          'so, first we find if the line has the label with colon
+          nLabel = InStr(LTrim(LCase(code_line2)), sLabel & ":")
       
-        If nLabel = 0 Then
-          'we're here because we couldn't find the the label with colon, so perhaps it's without colon
-          nLabel = InStr(LCase(Trim(code_line2)), sLabel)
-            
-        End If
-        If nLabel > 0 Then 'we've found our label string, so let's check if it's in the right position to be classified as a label, ie, at the start of the line
-          If (Mid(code_line2, 1, Len(sLabel)) = sLabel) Or (Mid(code_line2, 1, Len(sLabel & ":")) = sLabel & ":")
-            'We're here because we've found the label in the right position, i.e, at the start
-            'Print "found label execution startpoint"
-            'we need to set the execution point for this program as being equal to i + 1.
-            Select Case warrior_id
-              Case PROCESS_1
-                warrior_start_position1 = load_point + i
-                'Do we need to remove the label form this line? 
-                Return
-              Case PROCESS_2
-                warrior_start_position2 = load_point + i
-                Return
-            End Select
-            
+          If nLabel = 0 Then
+            'we're here because we couldn't find the the label with colon, so perhaps it's without colon
+            nLabel = InStr(LCase(Trim(code_line2)), sLabel)
           End If
+          
+          If nLabel > 0 Then 'we've found our label string, so let's check if it's in the right position to be classified as a label, ie, at the start of the line
+            If (Mid(code_line2, 1, Len(sLabel)) = sLabel) Or (Mid(code_line2, 1, Len(sLabel & ":")) = sLabel & ":")
+              'We're here because we've found the label in the right position, i.e, at the start
+              'Print "found label execution startpoint"
+              'we need to set the execution point for this program as being equal to i + 1.
+              Select Case warrior_id
+                Case PROCESS_1
+                  warrior_start_position1 = load_point + i
+                  'Do we need to remove the label form this line? 
+                  Return
+                Case PROCESS_2
+                  warrior_start_position2 = load_point + i
+                  Return
+              End Select
+            End If
+          End If
+          i += 1 'This is a non-comment instruction, so we increment the counter
         End If
       Next
-      i += 1
+     
     Else
       'if this line doesn't have an ORG statement, perhaps it has an END statement. If that
       'END statement is followed by a string, then that would be categorised as a label
@@ -597,7 +601,7 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
           'We don't have to worry if this reference is in an ORG or an END statement; we can replace both of these, too.
           
            instruction = core_memory[nAddress + j]
-           Print instruction
+           'Print instruction
            'We have the instuction line, let's see if it has the label
            nLabelPos = InStr(instruction, sIsLabel)
            If nLabelPos > 0
@@ -605,7 +609,7 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
             'check if we've found this label.
             'We can compute its relative position by comparing the difference between i & j counters.
             core_memory[nAddress + j] = Trim(Replace(instruction, sIsLabel, Str(i - j)))
-            Print core_memory[nAddress + j]
+            'Print core_memory[nAddress + j]
             'core_memory[nAddress + i] = Trim(Left(instruction, nLabelPos - 1) & Str(i - j) & Mid(instruction, nLabelPos + Len(sIsLabel)))         
                
            Endif
@@ -759,8 +763,12 @@ Public Sub cpu1()
     Case I_SLT 
     Case I_LDP 
     Case I_STP 
-    Case I_NOP  
-
+    Case I_NOP
+      'We do nothing
+      '
+    Case I_ORG
+      'We do nothing. This line just points to where execution should begin
+      Print instruction
         
   End Select
   
