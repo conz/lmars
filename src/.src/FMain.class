@@ -620,15 +620,15 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   
 End
 
-Public Sub GetOpCodeValue(sOpCode As String, nAddress As Integer) As String
-  'Given an opcode and a memory location, figure out what the data is that
+Public Sub ResolveOpAndValue(sOpand As String, nAddress As Integer) As Variant
+  'Given an opand and a memory location, figure out what the data is that
   'results, then return this
   '
   '
   
   'Address modes
   'from http://en.wikibooks.org/wiki/Core_War/Redcode
-  ' Each opcode listed above contains two registers.These registers are composed Of both a number And an address mode: 
+  ' Each opcod listed above contains two registers.These registers are composed Of both a number And an address mode: 
   ' #Immediate.The number Is Directly In the opcode.
   ' $( Or none)Direct.The opcode points To a cell relative To the current cell.
   ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
@@ -638,8 +638,8 @@ Public Sub GetOpCodeValue(sOpCode As String, nAddress As Integer) As String
   ' {  A-field Indirect, but the intermediate register is decreased before use.
   ' }A - field Indirect, the intermediate register Is Increased after use. 
   
-  Print sOpCode, nAddress
-  Select Case Trim$(Left(sOpCode, 1))
+  Print sOpand, nAddress
+  Select Case Trim$(Left(sOpand, 1))
     Case "#"
       ' #Immediate.The number Is Directly In the opcode.
       Print "immediate"
@@ -657,7 +657,7 @@ Public Sub GetOpCodeValue(sOpCode As String, nAddress As Integer) As String
       'We are here when we can find none of the above, so that means, assuming either $ or nothing, which is Direct
       'The opcode points To a cell relative To the current cell.
        
-       Return core_memory[nAddress + Eval(sOpCode)]
+       Return (nAddress + Eval(sOpand))
       
   End Select
   
@@ -666,9 +666,10 @@ End
 
 Public Sub cpu1()
   'This is the routine which executes the code in the array
-  Dim sOpcode, sOpands, sDataA, sDataB As String
+  Dim sOpcode, sOpands, sOpandA, sOpandB As String
   Dim nOpcode, nOpands As Integer
   Dim instruction, sIsLabel As String
+  Dim nRet As Variant
   
   instruction = core_memory[ip_table1[ip_table_index1]]
   'first, we remove any comments
@@ -711,11 +712,11 @@ Public Sub cpu1()
     nOpands = InStr(sOpands, ",")
     If nOpands > 0 
       'We have two , separated by a comman. Let's split them
-      sDataA = Trim(Left$(sOpands, nOpands - 1))
-      sDataB = Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands)))
+      sOpandA = Trim(Left$(sOpands, nOpands - 1))
+      sOpandB = Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands)))
     Else
       'We have one operand, let's assign it
-      sDataA = sOpands
+      sOpandA = sOpands
     Endif
     
   Else
@@ -744,8 +745,11 @@ Public Sub cpu1()
       
     Case I_MOV
       'we found a MOV instruction. We have to copy the contents of one address to another.
-      
-      core_memory[ip_table1[ip_table_index1]] = GetOpCodeValue(sDataA, ip_table1[ip_table_index1])
+      'we first resolve the value of the  sOpandA and shove that value into the addresses resolved by sOpandB
+      'sOpandA is the source of the information
+      'sOpandB is the destination where the information is to be moved to
+      nRet = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      core_memory[nRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
       '
     Case I_ADD
     Case I_SUB 
