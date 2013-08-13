@@ -706,11 +706,13 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
   Select Case Trim$(Left(sOpand, 1))
     Case "#"
       ' #Immediate.The number Is Directly In the opcode.
-      Return Eval(Mid(sOpand, 2))
+      ' I assume that this result should be supplied back as a DAT command, with direct value placed in the B field, thus
+      Return "dat #0, #" & Str(Eval(Mid(sOpand, 2))) 
       
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
-      Return core_memory[nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])]
+      'Return core_memory[nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])]
+      Return nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])
     Case "<"  
       ' < Indirect, but the intermediate register Is Decreased before use.
     Case ">"
@@ -813,12 +815,18 @@ Public Sub cpu1()
       'sOpandA is the source of the information
       'sOpandB is the destination where the information is to be moved to
       vRet = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
-      If TypeOf(vRet) = gb.Integer Then
-        'current problem here is we're not handling the opand properly. memory is being assigned into memory, rather than a #number into memory
+      
+      Select Case TypeOf(vRet)
+        Case gb.Integer
+        '
         core_memory[vRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
-      Else If TypeOf(vRet) = gb.String Then
+      Case gb.String
         
-      End If
+      Case gb.Float
+        'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+        '
+        core_memory[Int(vRet)] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      End Select
       
       'core_memory[vRet] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
       
