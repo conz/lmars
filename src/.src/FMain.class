@@ -647,15 +647,15 @@ Public Sub ExtractOpandB(instruction As String) As String
     sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
     nOpands = InStr(sOpands, ",")
     If nOpands > 0 
-      Return RemoveNonNumeric(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+      Return RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
     Endif
   Endif
 End
  
  
-Public Function RemoveNonNumeric(sRawNum As String) As String 
+Public Function RemoveNonMaths(sRawNum As String) As String 
   'Removes all non numeric characters from a string.
-   Dim numeric_chars As String = "0123456789" 
+   Dim numeric_chars As String = "0123456789+-*/%=!<>&|" 
    Dim i As Integer 
    Dim sResult As String = ""
    
@@ -669,24 +669,6 @@ Public Function RemoveNonNumeric(sRawNum As String) As String
    Return sResult
    
 End Function
-
-Public Sub GetNum2(sourcetext As String) As Integer
-  'Give a string like #3 or @7, return the number portion, using regular expressions
-  Dim re As Regexp
-  Dim i As Integer
-  Dim searchexpr As String
-  
-  searchexpr = "^([0-9]+)" ' don't forget to double up the backslashes
-  re = New Regexp(sourcetext, searchexpr)
-  
-  If re.submatches.Count > 0 Then
-    'Message.Info(re.Submatches.Count & " Submatches")
-    For i = 1 To re.Submatches.Count
-      Message.Info(Subst("Match &1 is &2 at &3", CStr(i), re.Submatches[i].Text, re.Submatches[i].offset))
-    Next
-  Endif
-  
-End
 
 
 Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
@@ -712,7 +694,7 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
       'Return core_memory[nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])]
-      Return nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])
+      Return nAddress + Eval(ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])) & ""
     Case "<"  
       ' < Indirect, but the intermediate register Is Decreased before use.
     Case ">"
@@ -1186,7 +1168,7 @@ ToolBarRunMode(True)
 
 'select the random position of warrior 1
 warrior_load_position1 = Int(Rnd(0, max_core_size - 1))
-warrior_load_position1 = 0
+'warrior_load_position1 = 0
 warrior_start_position1 = warrior_load_position1
 'Print "warrior_load_position1 " & warrior_start_position1
 
@@ -1195,7 +1177,7 @@ LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, PROCESS_1_COLOUR)
 
 'select the random position of warrior 2
 warrior_load_position2 = Int(Rnd(0, max_core_size - 1))
-warrior_load_position2 = 5
+'warrior_load_position2 = 5
 warrior_start_position2 = warrior_load_position2
 'Print "warrior_load_position2 " & warrior_start_position2
 
