@@ -607,15 +607,91 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   Next
   
 End
+Public Sub ExtractOpandB(instruction As String) As String
+  'Given an instruction string, figure out OpandB and return it
+  '
+  Dim nOpcode, nOpands As Integer
+  Dim sOpcode, sOpands As String
+  
+    'examples of each kind of instruction, from
+  'http://en.wikibooks.org/wiki/Core_War/Redcode
+  'DAT A,B  Data; executing this instruction kills the task.
+  ' MOV #A, B If one Is Immediate, copied immediate number To B.
+  ' MOV A, B Moves instruction at A To B.However, If A Is Immediate, copies the immediate number To B.
+  ' ADD A, B Adds A To B.
+  ' Sub A, B Subtracts A From B.
+  ' MUL A, B Multiplies A And B To produce the result.
+  ' Div A, B Divides B by A.Division by zero kills the process.
+  ' Mod A, B Modulus Of B In A.Division by zero kills the process.
+  ' JMP A, B Jumpts To A.
+  ' JMZ A B If * B Is 0, jumps To A.
+  ' JMN A, B If * B Is Not 0, jumps To A.
+  ' DJN A, B Decreases * b.If non zero, jumps To A.
+  ' CMP A, B If * a == * B( Or If immediate, #A == * B), skips an instruction
+  ' SPL A, B Creates a New Task, which starts at B.Newer task starts first.
+  ' SEQ A, B Skips past the Next instruction Is A And B are equal.
+  ' SNE A, B Skips past the Next instruction Is A And B are Not - equal.
+  ' SLT A, B Skips If * A < * B.(88 only)
+  ' XCH A, B At A, swaps A And B.(extended only)
+  ' PCT A, B At A, Protects operands From changing, Until an instruction Is Written To that address.
+  ' NOP A, B Has no special effect(although operands are still evaluates.)
+  ' STP A, B Stores A into P - Space at location specified by B.
+  ' LDP A, B Retrieves data From P - Space at location specified by B into A.
+  ' 
+  ' 
+  'split the instruction string
+  'find the opcode boundary.
+  nOpcode = InStr(instruction, " ") - 1
+  If nOpcode > 0 Then
+    sOpcode = Lower$(Left$(instruction, nOpcode))
+    sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+    nOpands = InStr(sOpands, ",")
+    If nOpands > 0 
+      Return RemoveNonNumeric(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+    Endif
+  Endif
+End
+ 
+ 
+Public Function RemoveNonNumeric(sRawNum As String) As String 
+  'Removes all non numeric characters from a string.
+   Dim numeric_chars As String = "0123456789" 
+   Dim i As Integer 
+   Dim sResult As String = ""
+   
+   For i = 1 To Len(sRawNum) 
+    If InStr(numeric_chars, Mid$(sRawNum, i, 1)) > 0 Then 
+      'Found a numeric character 
+      sResult = sResult & Mid$(sRawNum, i, 1) 
+    End If 
+   Next 
+   'Return the result 
+   Return sResult
+   
+End Function
+
+Public Sub GetNum2(sourcetext As String) As Integer
+  'Give a string like #3 or @7, return the number portion, using regular expressions
+  Dim re As Regexp
+  Dim i As Integer
+  Dim searchexpr As String
+  
+  searchexpr = "^([0-9]+)" ' don't forget to double up the backslashes
+  re = New Regexp(sourcetext, searchexpr)
+  
+  If re.submatches.Count > 0 Then
+    'Message.Info(re.Submatches.Count & " Submatches")
+    For i = 1 To re.Submatches.Count
+      Message.Info(Subst("Match &1 is &2 at &3", CStr(i), re.Submatches[i].Text, re.Submatches[i].offset))
+    Next
+  Endif
+  
+End
+
 
 Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
-  'Given an opand and a memory location, figure out what the data is that
-  'results, then return this
-  '
-  '
-  
-  'Address modes
-  'from http://en.wikibooks.org/wiki/Core_War/Redcode
+  'Given an opand and a memory location, figure out what the data is that results, then return this
+  ' Address modes - from http://en.wikibooks.org/wiki/Core_War/Redcode
   ' Each opcod listed above contains two registers.These registers are composed Of both a number And an address mode: 
   ' #Immediate.The number Is Directly In the opcode.
   ' $( Or none)Direct.The opcode points To a cell relative To the current cell.
@@ -634,7 +710,7 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
       
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
-      
+      Return core_memory[nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])]
     Case "<"  
       ' < Indirect, but the intermediate register Is Decreased before use.
     Case ">"
