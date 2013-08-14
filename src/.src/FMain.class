@@ -1162,8 +1162,8 @@ Public Sub tbRun_Click()
 'Dim start_position As Integer
 
 'we need to check to see if we're in a paused state; if so, we re-enable the timer, and exit this function
-If tbPause.enabled = True Then
-  Timer1.Enabled = True
+If tbStop.enabled = True Then
+  'Timer1.Enabled = True
   ToolBarRunMode(True)
   Return
 Endif
@@ -1243,7 +1243,9 @@ End
 
 Public Sub tbPause_Click()
 
-  tbRun.enabled = False
+  tbRun.enabled = True
+  tbPause.enabled = False
+  Timer1.enabled = False
 
 End
 
