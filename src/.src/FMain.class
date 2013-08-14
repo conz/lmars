@@ -369,7 +369,7 @@ Public Sub ToolBarRunMode(run_mode As Boolean)
 End
 
 
-Public Sub Resize_me()
+Public Sub ResizeMe()
   
   Dim x, y, PanelH As Integer
   
@@ -697,10 +697,16 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
       Return nAddress + Eval(ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])) & ""
     Case "<"  
       ' < Indirect, but the intermediate register Is Decreased before use.
+      Message("Now idea how to handle this yet")
+      
     Case ">"
       ' > Indirect, the intermediate register Is Increased after use.
+      Message("Now idea how to handle this yet")
+      
     Case "*"
-  
+      ' * A - field Indirect.The opcode points To a cell relative To the current cell.That cell 's A value is added to the indirect pointer, to provide the target.
+      Message("Now idea how to handle this yet")
+      
     Case Else
       'We are here when we can find none of the above, so that means, assuming either $ or nothing, which is Direct
       'The opcode points To a cell relative To the current cell.
@@ -768,7 +774,7 @@ Public Sub cpu1()
     Endif
     
   Else
-    Message("Process #1 thread #" & ip_table_index1 & " died.")
+    Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
     ToolBarRunMode(False)
     'Timer1.enabled = False
   Endif
@@ -787,7 +793,7 @@ Public Sub cpu1()
       'the process has executed an illegal instruction
       'If this is the only thread in this warrior's process table, then this warrior has died
       If ip_table_index1 > 1 Then
-        Message(" Process #1 thread #" & ip_table_index1 & " died.")
+        Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
       Endif
       
       
@@ -1116,7 +1122,7 @@ End
 
 Public Sub Form_Open()
   
-  Resize_me
+  ResizeMe
   PreloadWarriors
    
 
@@ -1137,7 +1143,7 @@ End
 
 Public Sub Form_Resize()
   
-  Resize_me
+  ResizeMe
   
 End
 
@@ -1175,6 +1181,8 @@ warrior_start_position1 = warrior_load_position1
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_1, warrior_load_position1, ed1.text, PROCESS_1_COLOUR)
 
+ip_table1.Clear 'Clear the process table
+
 'select the random position of warrior 2
 warrior_load_position2 = Int(Rnd(0, max_core_size - 1))
 'warrior_load_position2 = 5
@@ -1183,6 +1191,10 @@ warrior_start_position2 = warrior_load_position2
 
 'Message(Str$(start_position))
 LoadWarrior(PROCESS_2, warrior_load_position2, ed2.text, PROCESS_2_COLOUR)
+
+ip_table2.Clear 'Clear the process table
+
+current_process = 0 'reset the current process to be zero
 
 Timer1.Enabled = True
 
