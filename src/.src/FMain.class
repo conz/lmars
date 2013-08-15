@@ -821,6 +821,35 @@ Public Sub cpu1()
       core_cell_colour[vRet] = PROCESS_1_COLOUR
       '
     Case I_ADD
+      'we found a ADD instruction. We have to add the evaluated contents of the two operands
+      'ADD, SUB, MUL, DIV, MOD
+      'If A - mode Is Immediate, .AB,
+      'If B - mode Is Immediate And A - mode isn 't, .B,
+      'If neither mode Is Immediate, .F.
+      'Example of both opands being immediate
+      'ADD #10, #-1
+      ' The add command adds the "A" field To the "B" field.Here both fields are In immediate mode, so the operation takes place On one line.
+      ' After executing this instruction once, it would look As Follows.
+      ' ADD   #10,  #9
+      '
+      vRet = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      
+      Select Case TypeOf(vRet)
+        Case gb.Integer
+          'we are here becase sOpandB is a direct address
+          'core_memory[vRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
+          
+      Case gb.String
+        
+      Case gb.Float
+        'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+        '
+        core_memory[Int(vRet)] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      End Select
+      
+      'core_memory[vRet] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      
+      core_cell_colour[vRet] = PROCESS_1_COLOUR
     Case I_SUB 
     Case I_MUL 
     Case I_DIV 
@@ -1137,7 +1166,7 @@ End
 Public Sub tbStop_Click()
 
   ToolBarRunMode(False)
-  Timer1.enabled = False
+  'Timer1.enabled = False
 
 End
 
