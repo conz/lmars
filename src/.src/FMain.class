@@ -840,7 +840,8 @@ Public Sub cpu1()
           'core_memory[vRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
           
       Case gb.String
-        
+          'This is not needed presently
+          
       Case gb.Float
         'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
         '
