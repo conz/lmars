@@ -1,7 +1,6 @@
 [Breakpoints]
-Breakpoint[1]="FMain.834"
-Breakpoint[2]="FMain.847"
-Count=2
+Breakpoint[1]="FMain.879"
+Count=1
 
 [DebugWindow]
 Count=0
@@ -30,6 +29,9 @@ Geometry=[0,25,240,240]
 [DebugWindow/core_memory]
 Geometry=[2,25,240,304]
 
+[DebugWindow/gb]
+Geometry=[0,25,240,240]
+
 [DebugWindow/ip_table1]
 Geometry=[0,25,240,240]
 
@@ -39,7 +41,7 @@ Geometry=[-8,290,240,240]
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:849.6"
+File[2]=".src/FMain.class:896.14"
 Count=2
 
 [Watches]

@@ -651,7 +651,50 @@ Public Sub ExtractOpandB(instruction As String) As String
     Endif
   Endif
 End
- 
+Public Sub ExtractEverythingBeforeOpandB(instruction As String) As String
+  'Given an instruction string, figure out OpandB and return it
+  '
+  Dim nOpcode, nOpands As Integer
+  Dim sOpcode, sOpands As String
+  
+    'examples of each kind of instruction, from
+  'http://en.wikibooks.org/wiki/Core_War/Redcode
+  'DAT A,B  Data; executing this instruction kills the task.
+  ' MOV #A, B If one Is Immediate, copied immediate number To B.
+  ' MOV A, B Moves instruction at A To B.However, If A Is Immediate, copies the immediate number To B.
+  ' ADD A, B Adds A To B.
+  ' Sub A, B Subtracts A From B.
+  ' MUL A, B Multiplies A And B To produce the result.
+  ' Div A, B Divides B by A.Division by zero kills the process.
+  ' Mod A, B Modulus Of B In A.Division by zero kills the process.
+  ' JMP A, B Jumpts To A.
+  ' JMZ A B If * B Is 0, jumps To A.
+  ' JMN A, B If * B Is Not 0, jumps To A.
+  ' DJN A, B Decreases * b.If non zero, jumps To A.
+  ' CMP A, B If * a == * B( Or If immediate, #A == * B), skips an instruction
+  ' SPL A, B Creates a New Task, which starts at B.Newer task starts first.
+  ' SEQ A, B Skips past the Next instruction Is A And B are equal.
+  ' SNE A, B Skips past the Next instruction Is A And B are Not - equal.
+  ' SLT A, B Skips If * A < * B.(88 only)
+  ' XCH A, B At A, swaps A And B.(extended only)
+  ' PCT A, B At A, Protects operands From changing, Until an instruction Is Written To that address.
+  ' NOP A, B Has no special effect(although operands are still evaluates.)
+  ' STP A, B Stores A into P - Space at location specified by B.
+  ' LDP A, B Retrieves data From P - Space at location specified by B into A.
+  ' 
+  ' 
+  'split the instruction string
+  'find the opcode boundary.
+  nOpcode = InStr(instruction, " ") - 1
+  If nOpcode > 0 Then
+    sOpcode = Lower$(Left$(instruction, nOpcode))
+    sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+    nOpands = InStr(sOpands, ",")
+    If nOpands > 0 
+      Return RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+    Endif
+  Endif
+End
  
 Public Function RemoveNonMaths(sRawNum As String) As String 
   'Removes all non numeric characters from a string.
@@ -722,7 +765,7 @@ Public Sub cpu1()
   'This is the routine which executes the code in the array
   Dim sOpcode, sOpands, sOpandA, sOpandB As String
   Dim nOpcode, nOpands As Integer
-  Dim instruction, sIsLabel As String
+  Dim instruction, sIsLabel, new_instruction As String
   Dim vRet As Variant
   
   instruction = core_memory[ip_table1[ip_table_index1]]
@@ -836,8 +879,28 @@ Public Sub cpu1()
       
       Select Case TypeOf(vRet)
         Case gb.Integer
-          'we are here becase sOpandB is a direct address
-          'core_memory[vRet] = core_memory[ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])]
+          'we are here becase sOpandA is a direct address
+          'We now have to figure out what the sOpandB is for the instruction at the address pointed vy vRet and add to it
+          instruction = core_memory[vRet]
+          nOpcode = InStr(instruction, " ") - 1
+          If nOpcode > 0 Then
+            sOpcode = Lower$(Left$(instruction, nOpcode))
+            'We need to check if this is an actual Opcode, if not, then we populate this field with a DAT 
+            If IsOpCode(sOpcode) Then
+              sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+              nOpands = InStr(sOpands, ",")
+              If nOpands > 0 Then
+                new_instruction = sOpcode & " " & sOpandA & ", " & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+              Endif
+            Endif
+              'new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
+          Else
+             new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
+          Endif
+          
+          sOpandB = ExtractOpandB(core_memory[vRet])
+          
+          core_memory[vRet] = new_instruction
           
       Case gb.String
           'This is not needed presently
