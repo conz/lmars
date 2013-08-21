@@ -651,9 +651,9 @@ Public Sub ExtractOpandB(instruction As String) As String
     Endif
   Endif
 End
-Public Sub ExtractEverythingBeforeOpandB(instruction As String) As String
-  'Given an instruction string, figure out OpandB and return it
-  '
+Public Sub ExtractOpandA(instruction As String) As String
+  'Given an instruction string, figure out OpandA and return it
+  
   Dim nOpcode, nOpands As Integer
   Dim sOpcode, sOpands As String
   
@@ -690,8 +690,8 @@ Public Sub ExtractEverythingBeforeOpandB(instruction As String) As String
     sOpcode = Lower$(Left$(instruction, nOpcode))
     sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
     nOpands = InStr(sOpands, ",")
-    If nOpands > 0 
-      Return RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+    If nOpands > 1
+      Return Trim$(Left$(sOpands, nOpands - 1))
     Endif
   Endif
 End
@@ -882,6 +882,7 @@ Public Sub cpu1()
           'we are here becase sOpandA is a direct address
           'We now have to figure out what the sOpandB is for the instruction at the address pointed vy vRet and add to it
           instruction = core_memory[vRet]
+          If instruction = "" Then instruction = "dat #0, #0"
           nOpcode = InStr(instruction, " ") - 1
           If nOpcode > 0 Then
             sOpcode = Lower$(Left$(instruction, nOpcode))
@@ -889,8 +890,11 @@ Public Sub cpu1()
             If IsOpCode(sOpcode) Then
               sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
               nOpands = InStr(sOpands, ",")
+              
               If nOpands > 0 Then
-                new_instruction = sOpcode & " " & sOpandA & ", " & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+                'we have a valid opcode & opands instruction, like dat A, B.
+                'we need to add the 
+                new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", #" & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
               Endif
             Endif
               'new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
