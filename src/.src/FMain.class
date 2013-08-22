@@ -874,16 +874,55 @@ Public Sub cpu1()
       ' The add command adds the "A" field To the "B" field.Here both fields are In immediate mode, so the operation takes place On one line.
       ' After executing this instruction once, it would look As Follows.
       ' ADD   #10,  #9
-      '
-      vRet = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      ' Another example is 
+      '   ADD 1, 2
+      ' what this does is takes the B operand the cell one address beyond, and adds it to the B operand two addresses beyond
+      ' thus:
+      '   ADD 1, 2
+      '   DAT #0, #4
+      '   DAT #1, #0
+      '   
+      ' becomes:
+      '   ADD 1, 2
+      '   DAT #0, #4
+      '   DAT #1, #4
+      
+      vRet = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
       
       Select Case TypeOf(vRet)
         Case gb.Integer
-          'we are here becase sOpandA is a direct address
-          'We now have to figure out what the sOpandB is for the instruction at the address pointed vy vRet and add to it
+          'we are here becase sOpandA is a direct address. We have to figure out what the value of the B field is of the address pointed at by vRet
+          'Let's get the instruction pointed to by A         
           instruction = core_memory[vRet]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
           If instruction = "" Then instruction = "dat #0, #0"
           nOpcode = InStr(instruction, " ") - 1
+          'Split the opcodes and opands
+          If nOpcode > 0 Then
+            sOpcode = Lower$(Left$(instruction, nOpcode))
+            'We need to check if this is an actual Opcode, if not, then we populate this field with a DAT 
+            If IsOpCode(sOpcode) Then
+              sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+              nOpands = InStr(sOpands, ",")
+              
+              If nOpands > 0 Then
+                'we have a valid opcode & opands instruction, like dat A, B. We need to extract the B opand
+                nResult = ResolveOpandValue(ExtractOpandB(instruction), vRet)
+                
+                'new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", #" & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+              Endif
+            Endif
+              'new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
+          Else
+             'new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
+          Endif
+          
+          'Let's get the instruction pointed to by B   
+          instruction = core_memory[vRet]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          nOpcode = InStr(instruction, " ") - 1
+          'Split the opcodes and opands
           If nOpcode > 0 Then
             sOpcode = Lower$(Left$(instruction, nOpcode))
             'We need to check if this is an actual Opcode, if not, then we populate this field with a DAT 
@@ -902,6 +941,8 @@ Public Sub cpu1()
              new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
           Endif
           
+          'We now have to figure out what the sOpandB is for the instruction at the address pointed vy vRet and add to it
+          '
           sOpandB = ExtractOpandB(core_memory[vRet])
           
           core_memory[vRet] = new_instruction
