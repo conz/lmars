@@ -608,7 +608,8 @@ Public Sub ProcessLabels(warrior_id As Integer, nNumLines As Integer)
   
 End
 Public Sub ExtractOpandB(instruction As String) As String
-  'Given an instruction string, figure out OpandB and return it
+  'Given an instruction string, figure out OpandB and return it as substring
+  'thus DAT #1, #3 will return #3
   '
   Dim nOpcode, nOpands As Integer
   Dim sOpcode, sOpands As String
@@ -648,6 +649,50 @@ Public Sub ExtractOpandB(instruction As String) As String
     nOpands = InStr(sOpands, ",")
     If nOpands > 0 
       Return RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+    Endif
+  Endif
+End
+Public Sub ExtractOpandBVal(instruction As String) As Integer
+  'Given an instruction string, figure out OpandB and return its value
+  '
+  Dim nOpcode, nOpands As Integer
+  Dim sOpcode, sOpands As String
+  
+    'examples of each kind of instruction, from
+  'http://en.wikibooks.org/wiki/Core_War/Redcode
+  'DAT A,B  Data; executing this instruction kills the task.
+  ' MOV #A, B If one Is Immediate, copied immediate number To B.
+  ' MOV A, B Moves instruction at A To B.However, If A Is Immediate, copies the immediate number To B.
+  ' ADD A, B Adds A To B.
+  ' Sub A, B Subtracts A From B.
+  ' MUL A, B Multiplies A And B To produce the result.
+  ' Div A, B Divides B by A.Division by zero kills the process.
+  ' Mod A, B Modulus Of B In A.Division by zero kills the process.
+  ' JMP A, B Jumpts To A.
+  ' JMZ A B If * B Is 0, jumps To A.
+  ' JMN A, B If * B Is Not 0, jumps To A.
+  ' DJN A, B Decreases * b.If non zero, jumps To A.
+  ' CMP A, B If * a == * B( Or If immediate, #A == * B), skips an instruction
+  ' SPL A, B Creates a New Task, which starts at B.Newer task starts first.
+  ' SEQ A, B Skips past the Next instruction Is A And B are equal.
+  ' SNE A, B Skips past the Next instruction Is A And B are Not - equal.
+  ' SLT A, B Skips If * A < * B.(88 only)
+  ' XCH A, B At A, swaps A And B.(extended only)
+  ' PCT A, B At A, Protects operands From changing, Until an instruction Is Written To that address.
+  ' NOP A, B Has no special effect(although operands are still evaluates.)
+  ' STP A, B Stores A into P - Space at location specified by B.
+  ' LDP A, B Retrieves data From P - Space at location specified by B into A.
+  ' 
+  ' 
+  'split the instruction string
+  'find the opcode boundary.
+  nOpcode = InStr(instruction, " ") - 1
+  If nOpcode > 0 Then
+    sOpcode = Lower$(Left$(instruction, nOpcode))
+    sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+    nOpands = InStr(sOpands, ",")
+    If nOpands > 0 
+      Return Eval(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
     Endif
   Endif
 End
@@ -698,7 +743,7 @@ End
  
 Public Function RemoveNonMaths(sRawNum As String) As String 
   'Removes all non numeric characters from a string.
-   Dim numeric_chars As String = "0123456789+-*/%=!<>&|" 
+   Dim numeric_chars As String = "0123456789+-*/%=!<>&|#@$" 
    Dim i As Integer 
    Dim sResult As String = ""
    
@@ -732,12 +777,13 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
     Case "#"
       ' #Immediate.The number Is Directly In the opcode.
       ' I assume that this result should be supplied back as a DAT command, with direct value placed in the B field, thus
-      Return "dat #0, #" & Str(Eval(Mid(sOpand, 2))) 
+      'Return "dat #0, #" & Str(Eval(Mid(sOpand, 2))) 
+      Return Eval(Mid(sOpand, 2))
       
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
       'Return core_memory[nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])]
-      Return nAddress + Eval(ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])) & ""
+      Return nAddress + Eval(ExtractOpandBVal(core_memory[nAddress + Eval(Mid(sOpand, 2))])) & ""
     Case "<"  
       ' < Indirect, but the intermediate register Is Decreased before use.
       Message("Now idea how to handle this yet")
@@ -766,7 +812,7 @@ Public Sub cpu1()
   Dim sOpcode, sOpands, sOpandA, sOpandB As String
   Dim nOpcode, nOpands As Integer
   Dim instruction, sIsLabel, new_instruction As String
-  Dim vRet As Variant
+  Dim vRet, vResult, vOpandA, vOpandB As Variant
   
   instruction = core_memory[ip_table1[ip_table_index1]]
   'first, we remove any comments
@@ -887,13 +933,13 @@ Public Sub cpu1()
       '   DAT #0, #4
       '   DAT #1, #4
       
-      vRet = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
-      
-      Select Case TypeOf(vRet)
+      vOpandA = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      Select Case TypeOf(vOpandA)
         Case gb.Integer
           'we are here becase sOpandA is a direct address. We have to figure out what the value of the B field is of the address pointed at by vRet
-          'Let's get the instruction pointed to by A         
-          instruction = core_memory[vRet]
+          'Let's get the instruction pointed to by current instruction' A opand            
+          instruction = core_memory[vOpandA]
           'If that instruction is blank, make it a legal blank: dat #0, #0
           If instruction = "" Then instruction = "dat #0, #0"
           nOpcode = InStr(instruction, " ") - 1
@@ -906,9 +952,10 @@ Public Sub cpu1()
               nOpands = InStr(sOpands, ",")
               
               If nOpands > 0 Then
-                'we have a valid opcode & opands instruction, like dat A, B. We need to extract the B opand
-                nResult = ResolveOpandValue(ExtractOpandB(instruction), vRet)
                 
+                'we have a valid opcode & opands instruction, like dat A, B. We need to extract the B opand
+                vResult = ResolveOpandValue(ExtractOpandB(instruction), Int(vOpandA))
+                'We have the value of B
                 'new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", #" & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
               Endif
             Endif
@@ -917,8 +964,8 @@ Public Sub cpu1()
              'new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
           Endif
           
-          'Let's get the instruction pointed to by B   
-          instruction = core_memory[vRet]
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandA)]
           'If that instruction is blank, make it a legal blank: dat #0, #0
           If instruction = "" Then instruction = "dat #0, #0"
           nOpcode = InStr(instruction, " ") - 1
@@ -945,7 +992,7 @@ Public Sub cpu1()
           '
           sOpandB = ExtractOpandB(core_memory[vRet])
           
-          core_memory[vRet] = new_instruction
+          core_memory[vOpandA] = new_instruction
           
       Case gb.String
           'This is not needed presently
