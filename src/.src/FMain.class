@@ -937,8 +937,9 @@ Public Sub cpu1()
       vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
       Select Case TypeOf(vOpandA)
         Case gb.Integer
-          'we are here becase sOpandA is a direct address. We have to figure out what the value of the B field is of the address pointed at by vRet
-          'Let's get the instruction pointed to by current instruction' A opand            
+          'we are here becase sOpandA is a direct address in the ADD.
+          'Let's get the instruction pointed to by current instruction' A opand
+          vRet = vOpandA            
           instruction = core_memory[vOpandA]
           'If that instruction is blank, make it a legal blank: dat #0, #0
           If instruction = "" Then instruction = "dat #0, #0"
@@ -950,9 +951,7 @@ Public Sub cpu1()
             If IsOpCode(sOpcode) Then
               sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
               nOpands = InStr(sOpands, ",")
-              
               If nOpands > 0 Then
-                
                 'we have a valid opcode & opands instruction, like dat A, B. We need to extract the B opand
                 vResult = ResolveOpandValue(ExtractOpandB(instruction), Int(vOpandA))
                 'We have the value of B
@@ -965,7 +964,7 @@ Public Sub cpu1()
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
-          instruction = core_memory[Int(vOpandA)]
+          instruction = core_memory[Int(vOpandB)]
           'If that instruction is blank, make it a legal blank: dat #0, #0
           If instruction = "" Then instruction = "dat #0, #0"
           nOpcode = InStr(instruction, " ") - 1
@@ -979,8 +978,15 @@ Public Sub cpu1()
               
               If nOpands > 0 Then
                 'we have a valid opcode & opands instruction, like dat A, B.
-                'we need to add the 
-                new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", #" & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+                'we need to add the vResult from above to the B value of this instruction
+                '   DAT #0, #4
+                '   DAT #1, #0
+                '   
+                ' becomes:
+                '   DAT #0, #4
+                '   DAT #1, #4
+                ' new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", " & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+                new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", #" & Str(ResolveOpAndValue(ExtractOpandB(instruction), ip_table1[ip_table_index1]) + vResult)
               Endif
             Endif
               'new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
@@ -992,8 +998,8 @@ Public Sub cpu1()
           '
           sOpandB = ExtractOpandB(core_memory[vRet])
           
-          core_memory[vOpandA] = new_instruction
-          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vRet] = PROCESS_1_COLOUR
       Case gb.String
           'This is not needed presently
           
@@ -1005,7 +1011,7 @@ Public Sub cpu1()
       
       'core_memory[vRet] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
       
-      core_cell_colour[vRet] = PROCESS_1_COLOUR
+      
     Case I_SUB 
     Case I_MUL 
     Case I_DIV 
