@@ -984,7 +984,7 @@ Public Sub cpu1()
                 '   
                 ' becomes:
                 '   DAT #0, #4
-                '   DAT #1, #4
+                '   DAT #1, #4 
                 ' new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", " & RemoveNonMaths(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
                 new_instruction = sOpcode & " " & ExtractOpandA(instruction) & ", #" & Str(ResolveOpAndValue(ExtractOpandB(instruction), ip_table1[ip_table_index1]) + vResult)
               Endif
