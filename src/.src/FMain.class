@@ -81,6 +81,16 @@ Public ip_table2 As New Integer[] 'contains the two process table for the second
 Public ip_table_index1 As Integer 'specifies the current index into the instruction pointer table for warrior 1
 Public ip_table_index2 As Integer 'specifies the current index into the instruction pointer table for warrior 2
 
+Public Struct cpu_instruction
+  sOpcode As String
+  sOpandA As String 
+  sOpandB As String
+  vOpandAval As Variant
+  vOpandBval As Variant
+End Struct
+
+Public current_instruction As Cpu_instruction
+
 
 Public Sub SetWarriorCellColour()
   'Call this routine once, to establish the different warrior cell colours
@@ -805,6 +815,45 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
   End Select
   
 End
+
+Public Function ExtractInstruction() As Boolean
+  'Given the current instruction pointer, extract the text and values for the opcodes and operands
+  'if there is a problem, return false, else true
+  'This is a helper function called by cpu()
+  'Dim sOpcode, sOpands, sOpandA, sOpandB As String
+  Dim nOpcode, nOpands As Integer
+  'Dim instruction, sIsLabel, new_instruction As String
+  'Dim vRet, vResult, vOpandA, vOpandB As Variant
+  Dim instruction, sOpands As String
+  
+  'split the instruction string
+  'find the opcode boundary.
+  nOpcode = InStr(instruction, " ") - 1
+  If nOpcode > 0 Then
+    current_instruction.sOpcode = Lower$(Left$(instruction, nOpcode))
+    sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
+    nOpands = InStr(sOpands, ",")
+    If nOpands > 0 
+      'We have two , separated by a comman. Let's split them
+      current_instruction.sOpandA = Trim(Left$(sOpands, nOpands - 1))
+      current_instruction.sOpandB = Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands)))
+    Else
+      'We have one operand, let's assign it
+      current_instruction.sOpandA = sOpands
+    Endif
+    
+  Else
+    'this is not a valid instruction, return false
+    Return False
+  Endif
+  
+  current_instruction.vOpandA = ResolveOpAndValue(current_instruction.sOpandA, ip_table1[ip_table_index1])
+  current_instruction.vOpandB = ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1])
+  
+  
+  Return True
+End
+
 
 
 Public Sub cpu1()
