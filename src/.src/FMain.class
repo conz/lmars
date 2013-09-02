@@ -768,6 +768,22 @@ Public Function RemoveNonMaths(sRawNum As String) As String
    
 End Function
 
+Public Function RemoveNonArithmetic(sRawNum As String) As String 
+  'Removes all non numeric characters from a string.
+   Dim numeric_chars As String = "0123456789+-*/%"
+   Dim i As Integer 
+   Dim sResult As String = ""
+   
+   For i = 1 To Len(sRawNum) 
+    If InStr(numeric_chars, Mid$(sRawNum, i, 1)) > 0 Then 
+      'Found a numeric character 
+      sResult = sResult & Mid$(sRawNum, i, 1) 
+    End If 
+   Next 
+   'Return the result 
+   Return sResult
+   
+End Function
 
 Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
   'Given an opand and a memory location, figure out what the data is that results, then return this
@@ -810,8 +826,8 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
       'We are here when we can find none of the above, so that means, assuming either $ or nothing, which is Direct
       'The opcode points To a cell relative To the current cell.
        
-       'Return core_memory[nAddress + Eval(sOpand)]
-       Return (nAddress + Eval(sOpand))
+      'Return core_memory[nAddress + Eval(sOpand)]
+      Return (nAddress + Eval(RemoveNonArithmetic(sOpand)))
   End Select
   
 End
@@ -1093,15 +1109,14 @@ Public Sub cpu1()
         Case gb.Integer
           'we are here becase sOpandA is a direct address in the SUB.
           'Let's get the instruction pointed to by current instruction' A opand
-
-          vRet = vOpandA            
+        
           instruction = core_memory[vOpandA]
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
             ToolBarRunMode(False)
           Endif
-          'We should have the value of the operand we're going to subrtact
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
           'Let's get the instruction pointed to by current instruction' B opand   
           instruction = core_memory[Int(vOpandB)]
@@ -1114,14 +1129,6 @@ Public Sub cpu1()
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
-          
-          'Else
-          '   new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
-          'Endif
-          
-          'We now have to figure out what the sOpandB is for the instruction at the address pointed vy vRet and add to it
-          '
-          sOpandB = ExtractOpandB(core_memory[vRet])
           
           core_memory[vOpandB] = new_instruction
           core_cell_colour[vOpandB] = PROCESS_1_COLOUR
