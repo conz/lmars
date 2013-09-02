@@ -89,7 +89,7 @@ Public Struct cpu_instruction
   vOpandBval As Variant
 End Struct
 
-Public current_instruction As Cpu_instruction
+Public current_instruction As New Cpu_instruction
 
 
 Public Sub SetWarriorCellColour()
@@ -816,7 +816,7 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
   
 End
 
-Public Function ExtractInstruction() As Boolean
+Public Function ExtractInstruction(instruction As String) As Boolean
   'Given the current instruction pointer, extract the text and values for the opcodes and operands
   'if there is a problem, return false, else true
   'This is a helper function called by cpu()
@@ -824,7 +824,8 @@ Public Function ExtractInstruction() As Boolean
   Dim nOpcode, nOpands As Integer
   'Dim instruction, sIsLabel, new_instruction As String
   'Dim vRet, vResult, vOpandA, vOpandB As Variant
-  Dim instruction, sOpands As String
+  Dim sOpands As String
+  
   
   'split the instruction string
   'find the opcode boundary.
@@ -847,8 +848,8 @@ Public Function ExtractInstruction() As Boolean
     Return False
   Endif
   
-  current_instruction.vOpandA = ResolveOpAndValue(current_instruction.sOpandA, ip_table1[ip_table_index1])
-  current_instruction.vOpandB = ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1])
+  current_instruction.vOpandAval = ResolveOpAndValue(current_instruction.sOpandA, ip_table1[ip_table_index1])
+  current_instruction.vOpandBval = ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1])
   
   
   Return True
@@ -1061,7 +1062,77 @@ Public Sub cpu1()
       'core_memory[vRet] = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
       
       
-    Case I_SUB 
+    Case I_SUB
+      'we found a SUB instruction. We have to subtract the evaluated contents of the two operands
+      'ADD, SUB, MUL, DIV, MOD
+      'If A - mode Is Immediate, .AB,
+      'If B - mode Is Immediate And A - mode isn 't, .B,
+      'If neither mode Is Immediate, .F.
+      'This instruction works exactly like ADD, except for one fairly obvious difference. In
+      'fact, all the "arithmetic-logical" instructions work pretty much the same...
+      'Example of both opands being immediate
+      '   SUB #10, #-1
+      ' The sub command subtracts the "A" field To the "B" field.Here both fields are In immediate mode, so the operation takes place On one line.
+      ' After executing this instruction once, it would look As Follows.
+      '   SUB   #10,  #9
+      ' Another example is 
+      '   ADD 1, 2
+      ' what this does is takes the B operand the cell one address beyond, and adds it to the B operand two addresses beyond
+      ' thus:
+      '   SUB 1, 2
+      '   DAT #0, #4
+      '   DAT #1, #0
+      '   
+      ' becomes:
+      '   SUB 1, 2
+      '   DAT #0, #4
+      '   DAT #1, #-4
+      vOpandA = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      Select Case TypeOf(vOpandA)
+        Case gb.Integer
+          'we are here becase sOpandA is a direct address in the SUB.
+          'Let's get the instruction pointed to by current instruction' A opand
+
+          vRet = vOpandA            
+          instruction = core_memory[vOpandA]
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          'We should have the value of the operand we're going to subrtact
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
+          
+          'Else
+          '   new_instruction = "dat #0" & core_memory[ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])]
+          'Endif
+          
+          'We now have to figure out what the sOpandB is for the instruction at the address pointed vy vRet and add to it
+          '
+          sOpandB = ExtractOpandB(core_memory[vRet])
+          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case gb.String
+          'This is not needed presently
+          
+      Case gb.Float
+        'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+
+      End Select  
     Case I_MUL 
     Case I_DIV 
     Case I_MOD 
