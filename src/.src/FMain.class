@@ -716,7 +716,7 @@ Public Sub ExtractOpandBVal(instruction As String) As Integer
     sOpands = Trim$(Mid$(instruction, nOpcode + 1, Len(instruction)))
     nOpands = InStr(sOpands, ",")
     If nOpands > 0 
-      Return Eval(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands))))
+      Return Eval(RemoveNonArithmetic(Trim$(Mid$(sOpands, nOpands + 1, Len(sOpands)))))
     Endif
   Endif
 End
@@ -812,7 +812,8 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
   ' {  A-field Indirect, but the intermediate register is decreased before use.
   ' }A - field Indirect, the intermediate register Is Increased after use. 
   
-  Print sOpand, nAddress
+  Dim nResult As Integer
+  
   Select Case Trim$(Left(sOpand, 1))
     Case "#"
       ' #Immediate.The number Is Directly In the opcode.
@@ -824,7 +825,9 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
     Case "@"
       ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
       'Return core_memory[nAddress + ExtractOpandB(core_memory[nAddress + Eval(Mid(sOpand, 2))])]
-      Return nAddress + Eval(ExtractOpandBVal(core_memory[nAddress + Eval(Mid(sOpand, 2))])) & ""
+      'nResult = ExtractOpandBVal(core_memory[nAddress + Eval(RemoveNonArithmetic(Mid(sOpand, 2)))])
+      'Return nAddress + 
+      Return nAddress + ExtractOpandBVal(core_memory[nAddress + Eval(RemoveNonArithmetic(Mid(sOpand, 2)))])
     Case "<"  
       ' < Indirect, but the intermediate register Is Decreased before use.
       Message("Now idea how to handle this yet")
@@ -1178,7 +1181,7 @@ Public Sub cpu1()
       
       Select Case sOpandAAddrMode
         Case ADDRMODE_DIRECT
-          'we are here becase sOpandA is a direct address in the SUB.
+          'we are here becase sOpandA is a direct ($) address in the SUB.
           'Let's get the instruction pointed to by current instruction' A opand
         
           instruction = core_memory[vOpandA]
@@ -1205,10 +1208,45 @@ Public Sub cpu1()
           core_cell_colour[vOpandB] = PROCESS_1_COLOUR
           
         Case ADDRMODE_BFIELDINDIRECT
-          'This is not needed presently
+          'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
           
         Case ADDRMODE_IMMED
-        'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+          'we are here becase sOpandA is an immediate (#) address in the opcode
+          '
+          'We have the value of OpandA, so we need to figure out the address mode and value of OpandB 
+          Select Case sOpandBAddrMode
+           'Do we have a limited set of address modes that the B field can be in? Is it limited to $B and @B?
+            Case ADDRMODE_DIRECT
+              'We are here because we have a $B
+              instruction = core_memory[Int(vOpandB)]
+              
+            Case ADDRMODE_BFIELDINDIRECT
+              'We are here becase we have a @B
+              instruction = core_memory[Int(ExtractOpandBVal(core_memory[Int(vOpandB)]))]
+              
+          End Select
+          
+
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vOpandA)
+          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
 
       End Select  
     Case I_MUL 
