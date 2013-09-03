@@ -81,12 +81,26 @@ Public ip_table2 As New Integer[] 'contains the two process table for the second
 Public ip_table_index1 As Integer 'specifies the current index into the instruction pointer table for warrior 1
 Public ip_table_index2 As Integer 'specifies the current index into the instruction pointer table for warrior 2
 
+
+'Addressing modes
+Public Const ADDRMODE_IMMED As String = "#"
+Public Const ADDRMODE_DIRECT As String = "$"
+Public Const ADDRMODE_AFIELDINDIRECT As String = "*"
+Public Const ADDRMODE_BFIELDINDIRECT As String = "@"
+Public Const ADDRMODE_AFIELDINDIRECT_PRED As String = "{"
+Public Const ADDRMODE_BFIELDINDIRECT_PRED As String = "<"
+Public Const ADDRMODE_AFIELDINDIRECT_POSTD As String = "}"
+Public Const ADDRMODE_BFIELDINDIRECT_POSTD As String = ">"
+
+
 Public Struct cpu_instruction
   sOpcode As String
   sOpandA As String 
   sOpandB As String
   vOpandAval As Variant
   vOpandBval As Variant
+  sOpandAAddrMode As String
+  sOpandBAddrMode As String
 End Struct
 
 Public current_instruction As New Cpu_instruction
@@ -804,6 +818,7 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
       ' #Immediate.The number Is Directly In the opcode.
       ' I assume that this result should be supplied back as a DAT command, with direct value placed in the B field, thus
       'Return "dat #0, #" & Str(Eval(Mid(sOpand, 2))) 
+      'current_instruction.vOp
       Return Eval(Mid(sOpand, 2))
       
     Case "@"
@@ -828,6 +843,57 @@ Public Sub ResolveOpandValue(sOpand As String, nAddress As Integer) As Variant
        
       'Return core_memory[nAddress + Eval(sOpand)]
       Return (nAddress + Eval(RemoveNonArithmetic(sOpand)))
+  End Select
+  
+End
+
+Public Sub ResolveOpandAddrMode(sOpand As String) As String
+  'Given an opand  figure out the addressing mode is and return this
+  ' Address modes - from http://en.wikibooks.org/wiki/Core_War/Redcode
+  ' Each opcod listed above contains two registers.These registers are composed Of both a number And an address mode: 
+  ' #Immediate.The number Is Directly In the opcode.
+  ' $( Or none)Direct.The opcode points To a cell relative To the current cell.
+  ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
+  ' < Indirect, but the intermediate register Is Decreased before use.
+  ' > Indirect, the intermediate register Is Increased after use.
+  ' * A - field Indirect.The opcode points To a cell relative To the current cell.That cell 's A value is added to the indirect pointer, to provide the target.
+  ' {  A-field Indirect, but the intermediate register is decreased before use.
+  ' }A - field Indirect, the intermediate register Is Increased after use. 
+
+  Select Case Trim$(Left(sOpand, 1))
+    Case "#"
+      ' #Immediate.The number Is Directly In the opcode.
+      Return ADDRMODE_IMMED
+      
+    Case "@"
+      ' @Indirect.The opcode points To a cell relative To the current cell.That cell 's B value is added o the indirect pointer, to provide the target.
+      Return ADDRMODE_BFIELDINDIRECT
+      
+    Case "<"  
+      ' < Indirect, but the intermediate register Is Decreased before use.
+      Return ADDRMODE_BFIELDINDIRECT_PRED
+      
+    Case ">"
+      ' > Indirect, the intermediate register Is Increased after use.
+      Return ADDRMODE_BFIELDINDIRECT_POSTD
+      
+    Case "{"  
+      ' < Indirect, but the intermediate register Is Decreased before use.
+      Return ADDRMODE_AFIELDINDIRECT_PRED
+      
+    Case "}"
+      ' > Indirect, the intermediate register Is Increased after use.
+      Return ADDRMODE_AFIELDINDIRECT_POSTD  
+      
+    Case "*"
+      ' * A - field Indirect.The opcode points To a cell relative To the current cell.That cell 's A value is added to the indirect pointer, to provide the target.
+      Return ADDRMODE_AFIELDINDIRECT
+      
+    Case Else
+      'We are here when we can find none of the above, so that means, assuming either $ or nothing, which is Direct
+      'The opcode points To a cell relative To the current cell.
+      Return ADDRMODE_DIRECT
+      
   End Select
   
 End
@@ -867,6 +933,8 @@ Public Function ExtractInstruction(instruction As String) As Boolean
   current_instruction.vOpandAval = ResolveOpAndValue(current_instruction.sOpandA, ip_table1[ip_table_index1])
   current_instruction.vOpandBval = ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1])
   
+  current_instruction.sOpandAAddrMode = ResolveOpandAddrMode(current_instruction.sOpandA)
+  current_instruction.sOpandBAddrMode = ResolveOpandAddrMode(current_instruction.sOpandB)
   
   Return True
 End
@@ -875,7 +943,7 @@ End
 
 Public Sub cpu1()
   'This is the routine which executes the code in the array
-  Dim sOpcode, sOpands, sOpandA, sOpandB As String
+  Dim sOpcode, sOpands, sOpandA, sOpandB, sOpandAAddrMode, sOpandBAddrMode As String
   Dim nOpcode, nOpands As Integer
   Dim instruction, sIsLabel, new_instruction As String
   Dim vRet, vResult, vOpandA, vOpandB As Variant
@@ -1105,8 +1173,11 @@ Public Sub cpu1()
       '   DAT #1, #-4
       vOpandA = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
       vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
-      Select Case TypeOf(vOpandA)
-        Case gb.Integer
+      sOpandAAddrMode = ResolveOpandAddrMode(sOpandA)
+      sOpandBAddrMode = ResolveOpandAddrMode(sOpandB)
+      
+      Select Case sOpandAAddrMode
+        Case ADDRMODE_DIRECT
           'we are here becase sOpandA is a direct address in the SUB.
           'Let's get the instruction pointed to by current instruction' A opand
         
@@ -1133,10 +1204,10 @@ Public Sub cpu1()
           core_memory[vOpandB] = new_instruction
           core_cell_colour[vOpandB] = PROCESS_1_COLOUR
           
-        Case gb.String
+        Case ADDRMODE_BFIELDINDIRECT
           'This is not needed presently
           
-      Case gb.Float
+        Case ADDRMODE_IMMED
         'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
 
       End Select  
