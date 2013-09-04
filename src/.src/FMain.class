@@ -1209,6 +1209,38 @@ Public Sub cpu1()
           
         Case ADDRMODE_BFIELDINDIRECT
           'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+          '
+          'We already have the indirect instruction pointed to by current instruction's A opand
+
+          'We now have the instruction which contains the direct reference to the real address we are seeking
+          'vResult = current_instruction.vOpandBval
+          '
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandA)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
+          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
           
         Case ADDRMODE_IMMED
           'we are here becase sOpandA is an immediate (#) address in the opcode
