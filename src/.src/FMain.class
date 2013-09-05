@@ -1163,7 +1163,7 @@ Public Sub cpu1()
       ' After executing this instruction once, it would look As Follows.
       '   SUB   #10,  #9
       ' Another example is 
-      '   ADD 1, 2
+      '   SUB 1, 2
       ' what this does is takes the B operand the cell one address beyond, and adds it to the B operand two addresses beyond
       ' thus:
       '   SUB 1, 2
@@ -1282,6 +1282,137 @@ Public Sub cpu1()
 
       End Select  
     Case I_MUL 
+      'we found a MUL instruction. We have to subtract the evaluated contents of the two operands
+      'ADD, SUB, MUL, DIV, MOD
+      'If A - mode Is Immediate, .AB,
+      'If B - mode Is Immediate And A - mode isn 't, .B,
+      'If neither mode Is Immediate, .F.
+      'This instruction works exactly like ADD, except for one fairly obvious difference. In
+      'fact, all the "arithmetic-logical" instructions work pretty much the same...
+      'Example of both opands being immediate
+      '   MUL #10, #-1
+      ' The sub command subtracts the "A" field To the "B" field.Here both fields are In immediate mode, so the operation takes place On one line.
+      ' After executing this instruction once, it would look As Follows.
+      '   MUL   #10,  #9
+      ' Another example is 
+      '   MUL 1, 2
+      ' what this does is takes the B operand the cell one address beyond, and adds it to the B operand two addresses beyond
+      ' thus:
+      '   MUL 1, 2
+      '   DAT #0, #4
+      '   DAT #1, #0
+      '   
+      ' becomes:
+      '   MUL 1, 2
+      '   DAT #0, #4
+      '   DAT #1, #-4
+      vOpandA = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      sOpandAAddrMode = ResolveOpandAddrMode(sOpandA)
+      sOpandBAddrMode = ResolveOpandAddrMode(sOpandB)
+      
+      Select Case sOpandAAddrMode
+        Case ADDRMODE_DIRECT
+          'we are here becase sOpandA is a direct ($) address in the command.
+          'Let's get the instruction pointed to by current instruction' A opand
+        
+          instruction = core_memory[vOpandA]
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vResult)
+          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case ADDRMODE_BFIELDINDIRECT
+          'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+          '
+          'We already have the indirect instruction pointed to by current instruction's A opand
+
+          'We now have the instruction which contains the direct reference to the real address we are seeking
+          'vResult = current_instruction.vOpandBval
+          '
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandA)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vResult)
+          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case ADDRMODE_IMMED
+          'we are here becase sOpandA is an immediate (#) address in the opcode
+          '
+          'We have the value of OpandA, so we need to figure out the address mode and value of OpandB 
+          Select Case sOpandBAddrMode
+           'Do we have a limited set of address modes that the B field can be in? Is it limited to $B and @B?
+            Case ADDRMODE_DIRECT
+              'We are here because we have a $B
+              instruction = core_memory[Int(vOpandB)]
+              
+            Case ADDRMODE_BFIELDINDIRECT
+              'We are here becase we have a @B
+              instruction = core_memory[Int(ExtractOpandBVal(core_memory[Int(vOpandB)]))]
+              
+          End Select
+          
+
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            ToolBarRunMode(False)
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vOpandA)
+          
+          core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+
+      End Select  
     Case I_DIV 
     Case I_MOD 
     Case I_JMP 
