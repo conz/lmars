@@ -1,12 +1,8 @@
 [Bookmarks]
-FMain=[1120]
+FMain=[]
 
 [Breakpoints]
-Breakpoint[1]="FMain.1125"
-Breakpoint[2]="FMain.1176"
-Breakpoint[3]="FMain.1248"
-Breakpoint[4]="FMain.1277"
-Count=4
+Count=0
 
 [DebugWindow]
 Count=0
@@ -50,7 +46,7 @@ Geometry=[-8,290,240,240]
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:1300.14"
+File[2]=".src/FMain.class:1556.38"
 Count=2
 
 [Watches]
