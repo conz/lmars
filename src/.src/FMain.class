@@ -942,6 +942,31 @@ Public Function ExtractInstruction(instruction As String) As Boolean
   Return True
 End
 
+Public Sub ThreadDied(process As Integer, ip_table_index As Integer, instruction_addr As Integer)
+  'This is a helper functions which can be called from many spots in the code base. Passed some parameters, it will print out which process thread died
+  'at which memory location, executing which instruction
+  Dim threads As Integer
+  
+  'How do we figure out if this is the last thread for this process? Only if this is the last thread should we show a Message dialog
+  'otherwise, we need a less intrusive mechanism of showing a thread's death.
+  Select Case process 
+    Case PROCESS_1
+      threads = ip_table1.Length
+    Case PROCESS_2  
+      threads = ip_table2.Length
+  End Select
+  
+  If threads = 1 Then
+    'If last thread for this process then:
+    Message("Process #" & process & " thread #" & ip_table_index & " died executing an invalid instruction at: #" & instruction_addr)
+    'Because the process has died, we switch the toolbar to not be in Run mode any longer if this is the last thread for this process
+    ToolBarRunMode(False)
+  Else
+    'else if not last thread:
+    DrawingArea1.tooltip = "Process #" & process & " thread #" & ip_table_index & " died executing an invalid instruction at: #" & instruction_addr
+  End If
+  
+End
 
 
 Public Sub cpu1()
@@ -1000,8 +1025,10 @@ Public Sub cpu1()
     Endif
     
   Else
-    Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-    ToolBarRunMode(False)
+    ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+    'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+    'Message(" Process #1 thread #" & ip_table_index & " died executing an invalid instruction at: #" & instruction)
+    'ToolBarRunMode(False)
     'Timer1.enabled = False
   Endif
   
@@ -1019,7 +1046,8 @@ Public Sub cpu1()
       'the process has executed an illegal instruction
       'If this is the only thread in this warrior's process table, then this warrior has died
       If ip_table_index1 > 1 Then
-        Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+        ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+        'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
       Endif
       
       
@@ -1187,8 +1215,9 @@ Public Sub cpu1()
           instruction = core_memory[vOpandA]
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1198,8 +1227,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
@@ -1221,8 +1251,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1233,8 +1264,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
@@ -1261,8 +1293,9 @@ Public Sub cpu1()
 
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1271,8 +1304,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vOpandA)
@@ -1319,8 +1353,9 @@ Public Sub cpu1()
           instruction = core_memory[vOpandA]
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1330,8 +1365,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vResult)
@@ -1353,8 +1389,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1365,8 +1402,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vResult)
@@ -1393,8 +1431,9 @@ Public Sub cpu1()
 
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1403,8 +1442,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vOpandA)
@@ -1452,8 +1492,9 @@ Public Sub cpu1()
           instruction = core_memory[vOpandA]
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1463,8 +1504,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) / vResult)
@@ -1486,8 +1528,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1498,8 +1541,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) / vResult)
@@ -1526,8 +1570,9 @@ Public Sub cpu1()
 
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1536,8 +1581,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) / vOpandA)
@@ -1585,8 +1631,9 @@ Public Sub cpu1()
           instruction = core_memory[vOpandA]
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1596,8 +1643,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
@@ -1619,8 +1667,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1631,8 +1680,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
@@ -1659,8 +1709,9 @@ Public Sub cpu1()
 
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1669,8 +1720,9 @@ Public Sub cpu1()
           If instruction = "" Then instruction = "dat #0, #0"
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
+            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vOpandA)
@@ -1701,13 +1753,6 @@ Public Sub cpu1()
   
 End
 
-'==========================================================
- '                                         Muhammad Abubakar
- '                                     <joehacker@yahoo.com>
- '                                   <http://go.to/abubakar>
- '==========================================================
- 'You can use the code as u like in your projects but please
- 'give credit where credit is due :)
 Public Sub IsOpCode(instruction As String) As Boolean
   'We check to see if this is an actual opcode
   'if not, return fals
@@ -1761,209 +1806,6 @@ Public Sub IsOpCode(instruction As String) As Boolean
   Return 
 End
 
-
- Public Function parse(expr As String) As Float
-     Dim i As Float, a As String
-     Dim start As Float, endat As Float
-    
-     expr = Trim(expr)
-     If InStr(expr, "(") <> 0 Then
-         i = 1
-         While (InStr(expr, "(") <> 0)
-             a = Mid(expr, i, 1)
-             If a = "(" Then
-                 start = i
-                 
-             Else If a = ")" Then
-                 If start = 0 Then
-                     'MsgBox "Invalid Syntax."
-                     Return
-                 
-                 End If
-                 endat = i
-                 i = Val(givePrecedence(Mid(expr, start + 1, endat - start - 1)))
-                 expr = Left(expr, start - 1) & Str(i) & Right(expr, Len(expr) - endat)
-                 start = 0
-                 endat = 0
-                 i = 0
-             End If
-             i = i + 1
-         Wend
-     End If
-     If expr <> "" Then
-       Return Val(givePrecedence(expr))
-     Else
-       Return i 
-     End If
- End Function
-
- Private Function Evaluate(sTemp As String, sign As String, prevExpr As String) As String
-     Select Case sign
-         Case "+"
-             Return Str(Val(prevExpr) + Val(sTemp))
-         Case "-"
-             Return Str(Val(prevExpr) - Val(sTemp))
-         Case "*"
-             Return Str(Val(prevExpr) * Val(sTemp))
-         Case "/"
-             Return Str(Val(prevExpr) / Val(sTemp))
-         Case "^"
-             Return Str(Val(prevExpr) ^ Val(sTemp))
-     End Select
- End Function
-
- Private Function givePrecedence(expr As String) As String
-     Dim X As Integer
-     Dim sTemp As String
-     
-     Do While (InStr(expr, "!") <> 0 Or InStr(expr, "*") <> 0 Or InStr(expr, "/") <> 0 Or InStr(expr, "^") <> 0 Or InStr(expr, "+") <> 0 Or InStr(expr, "-") <> 0)
-         Wait
-         X = InStr(expr, "!")
-         If X <> 0 Then
-             sTemp = solveFor("!", expr)
-         Else
-             X = InStr(expr, "^")
-             If X <> 0 Then
-                 sTemp = solveFor("^", expr)
-             Else
-                 X = InStr(expr, "/")
-                 If X <> 0 Then
-                     sTemp = solveFor("/", expr)
-                 Else
-                     X = InStr(expr, "*")
-                     If X <> 0 Then
-                         sTemp = solveFor("*", expr)
-                     Else
-                         X = InStr(expr, "+")
-                         If X <> 0 Then
-                            sTemp = solveFor("+", expr)
-                         Else
-                             X = InStr(expr, "-")
-                             If X <> 0 Then
-                                 sTemp = solveFor("-", expr)
-                             End If
-                         End If
-                     End If
-                 End If
-             End If
-         End If
-         If sTemp = "" Then
-             Break
-         Else
-             expr = sTemp
-         End If
-     Loop
-     Return expr
-     
- End Function
- Private Function GetNumFrom(Pos As Integer, expr As String) As String
-     Dim i As Integer
-     Dim sTemp As String
-     Dim a As String
-     
-     If Pos <= Len(expr) Then
-         For i = Pos To Len(expr)
-         '{
-             a = Mid(expr, i, 1)
-             If Asc(a) >= 48 And Asc(a) <= 58 Or a = " " Or a = "." Or ((a = "-" Or a = "+") And Trim(Temp) = "") Then
-                 sTemp = sTemp & a
-             Else
-                 If LCase(a) = "e" Then
-                 sTemp = sTemp & "E" & GetNumFrom(i + 1, expr) 'Recursion
-                 i = Len(expr)
-                 Else
-                 'wrong syntax, u can handle error as you like
-                 End If
-             i = Len(expr)
-             End If
-         Next
-         '}
-     Return Temp
-     End If
- End Function
- Private Function solveFor(sign As String, expr As String) As String
-         '{
-             Dim X As Integer, start As Integer, endat As Integer
-             Dim sTemp As String, a As String, i As Integer
-             start = 1
-             X = InStr(expr, sign)
-             If sign <> "!" Then
-                 If sign = "+" Or sign = "-" Then
-                     a = GetNumFrom(1, expr)
-                     If Len(a) = Len(expr) Then
-                         Return ""
-
-                     End If
-                     sTemp = GetNumFrom(Len(a) + 1, expr)
-                     If Sgn(Val(sTemp)) < 0 Then
-                        sign = "-" 
-                      Else 
-                        sign = "+"
-                     End If
-                     X = InStr(Len(a), expr, sign)
-                     endat = Len(a) + Len(sTemp)
-                     sTemp = Evaluate(GetNumFrom(X + 1, expr), sign, a)
-                     expr = Left(expr, start - 1) & sTemp & Right(expr, Len(expr) - endat)
-                     Return expr
-                     
-                 End If
-             End If
-             'i = InStr(x + 1, expr, sign)
-             
-             For i = X - 1 To 1 Step -1 'going back
-                 a = Mid(expr, i, 1)
-                 If Asc(a) >= 48 And Asc(a) <= 58 Or a = " " Or a = "." Or LCase(a) = "e" Then
-                     sTemp = a & sTemp
-                 Else
-                     If (a = "-" Or a = "+") And i - 1 > 0 Then
-                         If Mid(expr, i - 1, 1) = "e" Then
-                             sTemp = a & sTemp
-                         Else
-                             start = i + 1
-                             i = 1
-                         End If
-                     Else
-                         start = i + 1
-                         i = 1
-                     End If
-                 End If
-             Next
-             If Trim(sTemp) <> "" Then
-                 'solving for factorial
-                 If sign = "!" Then
-                     If Int(Val(sTemp)) <> Val(sTemp) Then
-                         'wrong syntax, handle it in whatever way u awnt
-                     Else
-                         expr = Left(expr, start - 1) & Str(fact(Val(sTemp))) & Right(expr, Len(expr) - X)
-                         Return expr
-                     End If
-                 Else
-                     'its not a factorial calculations
-                     endat = X + Len(GetNumFrom(X + 1, expr))
-                     sTemp = Evaluate(GetNumFrom(X + 1, expr), sign, sTemp)
-                     expr = Left(expr, start - 1) & sTemp & Right(expr, Len(expr) - endat)
-                     'Job done, go back
-                     Return expr
-                 End If
-             Else
-                 Return ""
-             End If
-             
- End Function
- 
- 'Algo for factorial
- Private Function fact(num As Integer) As Float
-     Dim b As Float
-     Dim i As Integer
-     b = 1
-     For i = 1 To num
-         b = b * i 'I wish I could write it as b * = num :(
-     Next
-     Return b
-
- End Function
-
-
 Public Sub _new()
 'Is called at the start of the program
 ToolBarRunMode(False)
@@ -1978,7 +1820,6 @@ Public Sub Form_Open()
   
   ResizeMe
   PreloadWarriors
-   
 
 End
 

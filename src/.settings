@@ -40,10 +40,13 @@ Geometry=[0,25,240,240]
 [DebugWindow/ip_table2]
 Geometry=[-8,290,240,240]
 
+[DebugWindow/last]
+Geometry=[0,25,240,240]
+
 [OpenFile]
 File[1]=".src/FMain.form"
 Active=2
-File[2]=".src/FMain.class:512.38"
+File[2]=".src/FMain.class:958.19"
 Count=2
 
 [Watches]
