@@ -10,15 +10,10 @@
       Text = ("Open 1")
       Picture = Picture["icon:/32/add"]
     }
-    { tbOpen2 ToolButton
-      MoveScaled(89,2,12,4)
-      Text = ("Open 2")
-      Picture = Picture["icon:/32/add"]
-    }
-    { tbQuit ToolButton
-      MoveScaled(122,2,10,4)
-      Text = ("Quit")
-      Picture = Picture["icon:/32/quit"]
+    { tbSave1 ToolButton
+      MoveScaled(15,2,12,4)
+      Text = ("Save 1")
+      Picture = Picture["icon:/32/save"]
     }
     { tbRun ToolButton
       MoveScaled(37,2,10,4)
@@ -40,15 +35,20 @@
       Text = ("Stop")
       Picture = Picture["icon:/32/stop"]
     }
-    { tbSave1 ToolButton
-      MoveScaled(15,2,12,4)
-      Text = ("Save 1")
-      Picture = Picture["icon:/32/save"]
+    { tbOpen2 ToolButton
+      MoveScaled(89,2,12,4)
+      Text = ("Open 2")
+      Picture = Picture["icon:/32/add"]
     }
     { tbSave2 ToolButton
       MoveScaled(103,2,12,4)
       Text = ("Save 2")
       Picture = Picture["icon:/32/save"]
+    }
+    { tbQuit ToolButton
+      MoveScaled(122,2,10,4)
+      Text = ("Quit")
+      Picture = Picture["icon:/32/quit"]
     }
     { Separator1 Separator
       MoveScaled(29,1,3,6)

@@ -10,6 +10,11 @@
       Text = ("Open 1")
       Picture = Picture["icon:/32/add"]
     }
+    { tbSave1 ToolButton
+      MoveScaled(15,2,12,4)
+      Text = ("Save 1")
+      Picture = Picture["icon:/32/save"]
+    }
     { tbOpen2 ToolButton
       MoveScaled(89,2,12,4)
       Text = ("Open 2")
@@ -39,11 +44,6 @@
       MoveScaled(72,2,10,4)
       Text = ("Stop")
       Picture = Picture["icon:/32/stop"]
-    }
-    { tbSave1 ToolButton
-      MoveScaled(15,2,12,4)
-      Text = ("Save 1")
-      Picture = Picture["icon:/32/save"]
     }
     { tbSave2 ToolButton
       MoveScaled(103,2,12,4)
@@ -80,7 +80,6 @@
     Highlight = Highlight.Custom
   }
   { Timer1 #Timer
-    #MoveScaled(127,11)
-    Delay = 10
+    #MoveScaled(84,7)
   }
 }

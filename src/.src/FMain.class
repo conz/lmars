@@ -7,7 +7,19 @@ Public core_cell_colour As New Integer[8000] 'stores the colour of the last proc
 'Public core_cell_colour[8000] As Integer 'stores the colour of the last process which changed this cell
 'Public Const Warrior1 As Integer = Color.red 'Color.red
 '
+'P-Space memory table
+'The size of the P-space is usually smaller than that of the core, typically 1/16 of the
+' core size.The addresses In the P - Space wrap around just Like In the core.The size Of
+' the P - Space must naturally be a factor Of the core size, Or something weird will
+' happen.
+' There Is One little peculiarity In the pMARS implementation Of P - space.Since the
+' intention was To keep Access To P - Space slow, loading Or saving two P - Space fields With
+' one instruction isn 't allowed. This is a Good Thing, but the result is at the very least a
+' kludge.What this actually means Is That LDP.F, .X And .I all work Like LDP.B!( And the
+' same For STP too, Of course)
 '
+Public p_space_1 As New Integer[8000 / 16] 'provides the p-space table for the first warrior
+Public p_space_2 As New Integer[8000 / 16] 'provides the p-space table for the second warrior
 
 Public Const vertical_lines As Integer = 89
 Public Const horizontal_lines As Integer = 90
@@ -113,6 +125,41 @@ Public Sub SetWarriorCellColour()
   
 End
 
+Public Sub SetPSpace1(address As Integer, value As Integer)
+  'Set the nominated value for the nominated address for warrior1
+  If address > p_space_1.Length Or address < 0 Then
+    ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+  Endif
+  p_space_1[address] = value
+  
+End
+
+Public Function GetPSpace1(address As Integer) As Integer
+  'Get the stored value for the nominated address for warrior1
+  If address > p_space_1.Length Or address < 0 Then
+    ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+  Endif
+  Return p_space_1[address] 
+  
+End
+
+Public Sub SetPSpace2(address As Integer, value As Integer)
+  'Set the nominated value for the nominated address for warrior2
+  If address > p_space_2.Length Or address < 0 Then
+    ThreadDied(PROCESS_2, ip_table_index2, ip_table2[ip_table_index2])
+  Endif
+  p_space_2[address] = value
+  
+End
+
+Public Function GetPSpace2(address As Integer) As Integer
+  'Get the stored value for the nominated address for warrior1
+  If address > p_space_2.Length Or address < 0 Then
+    ThreadDied(PROCESS_2, ip_table_index2, ip_table2[ip_table_index2])
+  Endif
+  Return p_space_2[address] 
+  
+End
 
 Public Function StripComments(sCode As String) As String
   'Given a string, strip out any comments, which are denoted by a semi-colon, until the end of the line
@@ -1025,13 +1072,9 @@ Public Sub cpu1()
     Endif
     
   Else
+    'We are here because we've executed an illegal instruction
     ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-    'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-    'Message(" Process #1 thread #" & ip_table_index & " died executing an invalid instruction at: #" & instruction)
-    'ToolBarRunMode(False)
-    'Timer1.enabled = False
   Endif
-  
   
   'Instruction modifiers[edit].A  A -> A
   ' .B B - > B
@@ -1046,8 +1089,8 @@ Public Sub cpu1()
       'the process has executed an illegal instruction
       'If this is the only thread in this warrior's process table, then this warrior has died
       If ip_table_index1 > 1 Then
+        'We are here because we've executed an illegal instruction
         ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-        'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
       Endif
       
       
@@ -1216,8 +1259,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1228,8 +1269,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
@@ -1252,8 +1291,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1265,8 +1302,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vResult)
@@ -1294,8 +1329,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1305,8 +1338,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) - vOpandA)
@@ -1354,8 +1385,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1366,8 +1395,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vResult)
@@ -1403,8 +1430,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vResult)
@@ -1431,9 +1456,7 @@ Public Sub cpu1()
 
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
-            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])            
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1443,8 +1466,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) * vOpandA)
@@ -1493,8 +1514,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1505,8 +1524,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) / vResult)
@@ -1529,8 +1546,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1542,8 +1557,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) / vResult)
@@ -1571,8 +1584,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1582,8 +1593,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) / vOpandA)
@@ -1632,8 +1641,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
           vResult = current_instruction.vOpandBval
@@ -1644,8 +1651,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
@@ -1668,8 +1673,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
@@ -1681,8 +1684,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
@@ -1706,12 +1707,9 @@ Public Sub cpu1()
               
           End Select
           
-
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           'Let's get the instruction pointed to by current instruction' B opand   
@@ -1721,8 +1719,6 @@ Public Sub cpu1()
           If ExtractInstruction(instruction) = False Then
             'we are here because there's a problem with the instruction
             ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
-            'Message(" Process #1 thread #" & ip_table_index1 & " died executing an invalid instruction at: #" & ip_table1[ip_table_index1])
-            'ToolBarRunMode(False)
           Endif
           
           new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vOpandA)
@@ -1731,7 +1727,8 @@ Public Sub cpu1()
           core_cell_colour[vOpandB] = PROCESS_1_COLOUR
 
       End Select   
-    Case I_JMP 
+    Case I_JMP
+      
     Case I_JMZ 
     Case I_JMN 
     Case I_DJN 
@@ -1741,10 +1738,230 @@ Public Sub cpu1()
     Case I_SNE 
     Case I_SLT 
     Case I_LDP 
-    Case I_STP 
+    Case I_STP
+      'save to p-space (saves a number to private storage space)
+      ' So 
+      '   STP.AB #4, #5 
+      ' For example would put the value 4 into the P - Space field 5. 
+      ' Similarly:
+      '   STP.B 2, 3
+      '   ...
+      '   DAT #0, #10
+      '   DAT #0, #7
+      ' would put the value 10 into the P - Space field 7, Not 3!This can get pretty confusing If
+      ' the STP itself uses indirect addressing, which leads into a sort Of "double-indirect"
+      ' addressing system.
+      
+      'The code in this section hasn't been updated; it still has the wrong functionality
+      vOpandA = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      sOpandAAddrMode = ResolveOpandAddrMode(sOpandA)
+      sOpandBAddrMode = ResolveOpandAddrMode(sOpandB)
+      
+      Select Case sOpandAAddrMode
+        Case ADDRMODE_DIRECT
+          'we are here becase sOpandA is a direct ($) address in the command.
+          'Let's get the instruction pointed to by current instruction' A opand
+          instruction = core_memory[vOpandA]
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
+          
+          'Normally, we'd table some action, but as this is a NOP, we evaluate the operands but do nothing except set the colour of the address we would have modified
+          'core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case ADDRMODE_BFIELDINDIRECT
+          'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+          '
+          'We already have the indirect instruction pointed to by current instruction's A opand
+
+          'We now have the instruction which contains the direct reference to the real address we are seeking
+          'vResult = current_instruction.vOpandBval
+          '
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandA)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
+          
+          'Normally, we'd table some action, but as this is a NOP, we evaluate the operands but do nothing except set the colour of the address we would have modified
+          'core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case ADDRMODE_IMMED
+          'we are here becase sOpandA is an immediate (#) address in the opcode
+          '
+          'We have the value of OpandA, so we need to figure out the address mode and value of OpandB 
+          Select Case sOpandBAddrMode
+           'Do we have a limited set of address modes that the B field can be in? Is it limited to $B and @B?
+            Case ADDRMODE_DIRECT
+              'We are here because we have a $B
+              instruction = core_memory[Int(vOpandB)]
+              
+            Case ADDRMODE_BFIELDINDIRECT
+              'We are here becase we have a @B
+              instruction = core_memory[Int(ExtractOpandBVal(core_memory[Int(vOpandB)]))]
+              
+          End Select
+          
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vOpandA)
+          
+          'Normally, we'd table some action, but as this is a NOP, we evaluate the operands but do nothing except set the colour of the address we would have modified
+          'core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+       End Select       
     Case I_NOP
-      'We do nothing
+      'Well, this instruction does nothing. (And it does it really well, too.) It's almost
+      'never used In an actual warrior, but it 's very useful in debugging. Remember that
+      'any In - Or decrements are still evaluated.
+      'NOP A, B Has no special effect(although operands are still evaluated.)
       '
+      vOpandA = ResolveOpAndValue(sOpandA, ip_table1[ip_table_index1])
+      vOpandB = ResolveOpAndValue(sOpandB, ip_table1[ip_table_index1])
+      sOpandAAddrMode = ResolveOpandAddrMode(sOpandA)
+      sOpandBAddrMode = ResolveOpandAddrMode(sOpandB)
+      
+      Select Case sOpandAAddrMode
+        Case ADDRMODE_DIRECT
+          'we are here becase sOpandA is a direct ($) address in the command.
+          'Let's get the instruction pointed to by current instruction' A opand
+          instruction = core_memory[vOpandA]
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
+          
+          'Normally, we'd table some action, but as this is a NOP, we evaluate the operands but do nothing except set the colour of the address we would have modified
+          'core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case ADDRMODE_BFIELDINDIRECT
+          'We are here because we've got an indirect @address, so, in the address pointed to by that indirect value, we place the value from the A opand.
+          '
+          'We already have the indirect instruction pointed to by current instruction's A opand
+
+          'We now have the instruction which contains the direct reference to the real address we are seeking
+          'vResult = current_instruction.vOpandBval
+          '
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandA)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          'We should have the value of the operand we're going to subrtact; let's store as a temporary placeholder
+          vResult = current_instruction.vOpandBval
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vResult)
+          
+          'Normally, we'd table some action, but as this is a NOP, we evaluate the operands but do nothing except set the colour of the address we would have modified
+          'core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+          
+        Case ADDRMODE_IMMED
+          'we are here becase sOpandA is an immediate (#) address in the opcode
+          '
+          'We have the value of OpandA, so we need to figure out the address mode and value of OpandB 
+          Select Case sOpandBAddrMode
+           'Do we have a limited set of address modes that the B field can be in? Is it limited to $B and @B?
+            Case ADDRMODE_DIRECT
+              'We are here because we have a $B
+              instruction = core_memory[Int(vOpandB)]
+              
+            Case ADDRMODE_BFIELDINDIRECT
+              'We are here becase we have a @B
+              instruction = core_memory[Int(ExtractOpandBVal(core_memory[Int(vOpandB)]))]
+              
+          End Select
+          
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          'Let's get the instruction pointed to by current instruction' B opand   
+          instruction = core_memory[Int(vOpandB)]
+          'If that instruction is blank, make it a legal blank: dat #0, #0
+          If instruction = "" Then instruction = "dat #0, #0"
+          If ExtractInstruction(instruction) = False Then
+            'we are here because there's a problem with the instruction
+            ThreadDied(PROCESS_1, ip_table_index1, ip_table1[ip_table_index1])
+          Endif
+          
+          new_instruction = current_instruction.sOpcode & " " & current_instruction.sOpandA & ", #" & Str(ResolveOpAndValue(current_instruction.sOpandB, ip_table1[ip_table_index1]) Mod vOpandA)
+          
+          'Normally, we'd table some action, but as this is a NOP, we evaluate the operands but do nothing except set the colour of the address we would have modified
+          'core_memory[vOpandB] = new_instruction
+          core_cell_colour[vOpandB] = PROCESS_1_COLOUR
+
+      End Select
     Case I_ORG
       'We do nothing. This line just points to where execution should begin
       Print instruction
