@@ -2161,11 +2161,12 @@ Public Sub tbPause_Click()
 
 End
 
-Public Sub ed1_Highlight()
-  'Highlight the new line
+Public Sub ed_Highlight(ed As Editor)
+  'Highlight the new line. Get's called each time there's a new line added to a editor text widget.
   'Code below is inspired/copied from the demo which ships with Gambas (GPL)
   'This code has not yet been tweaked to work with RedCode
   '
+  
   Dim iState As Integer
   Dim iNextState As Integer
   Dim iInd As Integer
@@ -2173,83 +2174,60 @@ Public Sub ed1_Highlight()
   Dim sText As String
   Dim sCar As String
   Dim iPos As Integer
-  Dim bMarkup As Boolean
+  Dim bMarkup, bComment As Boolean
 
   iState = Highlight.State
   sText = Highlight.Text
 
-  'PRINT "Highlight:";; iState;; sText
+  'We want to highlight as a comment any line which begins with a semi-colon ;
+  'What is the state machine we want to build?
+  'If this char is a semi-colon, the rest of the line is a comment, and mark it as such, switch on the boolean which says we're in a comment
+  'if this is the first char in a line and it's not a semi-colon, reset the boolean to be a non-comment
+  'if this line isn't a comment, it's a Normal line
 
-  For iInd = 1 To String.Len(sText)
-
-    iNextState = iState
-    sCar = String.Mid$(sText, iInd, 1)
-
-    If bMarkup Then
-
-      If sCar = ">" Then
-        bMarkup = False
-        iState = Highlight.Keyword
-        iNextState = Highlight.Normal
-      Else If sCar = " " Then
-        iNextState = Highlight.Operator
-      Else If sCar = "=" Then
-        iNextState = Highlight.String
-      Endif
-
-    Else
-
-      Select Case iState
-        Case Highlight.Normal
-          If sCar = "<" Then
-            If String.Mid$(sText, iInd, 4) = "<!--" Then
+  If Left(Trim(sText), 1) = ";" Then 'If thie first char is a comment
+    'make all if this line a comment
+    iState = Highlight.Comment
+    'iNextState = Highlight.Comment
+    bComment = True
+    Highlight.Add(iState, String.Len(sText))
+  Else
+    'we are here because the whole line isn't a comment
+    iState = Highlight.Normal
+    iNextState = Highlight.Normal
+    For iInd = 1 To String.Len(sText)
+      sCar = String.Mid$(sText, iInd, 1)
+        Select Case iState
+          Case Highlight.Normal
+            If sCar = ";" Then
+              'if this char is a comment char set highlight to comment
               iState = Highlight.Comment
               iNextState = Highlight.Comment
+              bComment = True
+              Highlight.Add(iState) 'highlight this char
             Else
-              iState = Highlight.Keyword
-              iNextState = Highlight.Keyword
+              'this is not a comment
+              iState = Highlight.Normal
+              iNextState = Highlight.Normal
+              Highlight.Add(iState) 'highlight this char
               bMarkup = True
             Endif
-          Else If sCar = "&" Then
-            iPos = String.InStr(sText, ";", iInd)
-            If iPos = 0 Or iPos = iInd + 1 Then
-              iState = Highlight.Error
-            Else
-              For J = iInd + 1 To iPos - 1
-                sCar = String.Mid$(sText, J, 1)
-                If IsLetter(sCar) Then Continue
-                If IsDigit(sCar) Then Continue
-                If InStr("_#", sCar) Then Continue
-                Break
-              Next
-              If J = iPos Then
-                Highlight.Add(Highlight.Number, iPos - iInd + 1)
-                iInd = iPos
-                Continue
-              Else
-                iState = Highlight.Error
-              Endif
-            Endif
-          Endif
-        Case Highlight.Comment
-          If sCar = ">" And If iInd > 2 And If String.Mid$(sText, iInd - 2, 2) = "--" Then
-            iNextState = Highlight.Normal
-          Endif
-      End Select
-
-    Endif
-
-    Highlight.Add(iState)
-    iState = iNextState
-
-  Next
-
-  If iNextState <> Highlight.Comment Then
-    iNextState = Highlight.Normal
-  Endif
+          Case Highlight.Comment
+            'we are already in a comment
+            iNextState = Highlight.Comment
+            Highlight.Add(iState) 'highlight this char
+        End Select
+    Next
+  End If
 
   Highlight.State = iNextState
   Highlight.ShowLimit = False
+  
+End
+
+Public Sub ed1_Highlight()
+
+  ed_Highlight(ed1)
 
 End
 
@@ -2264,3 +2242,11 @@ Public Sub tbSave2_Click()
   SaveWarrior(PROCESS_2)
 
 End
+
+Public Sub ed2_Highlight()
+
+  ed_Highlight(ed2)
+
+End
+
+
