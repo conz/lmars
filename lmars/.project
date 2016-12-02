@@ -1,0 +1,18 @@
+# Gambas Project File 3.0
+# Compiled with Gambas 3.9.1
+Title=Linux Mars Core War Environment
+Startup=FMain
+Icon=planet-remix-300px.png
+Version=0.1.0
+Component=gb.image
+Component=gb.qt4
+Component=gb.form
+Component=gb.settings
+Component=gb.pcre
+Component=gb.qt4.ext
+Description="This is an IDE for CoreWars. Per Wikipedia, \"Core War is a programming game created by D. G. Jones and A. K. Dewdney in which two or more battle programs (called \"warriors\") compete for control of a virtual computer. These battle programs are written in an abstract assembly language called Redcode.\""
+TabSize=2
+Language=en_AU
+Vendor=CamEra
+Packager=1
+Tags=Amusement,ComputerScience,Development,IDE,Game

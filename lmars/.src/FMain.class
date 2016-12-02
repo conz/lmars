@@ -1728,8 +1728,12 @@ Public Sub cpu1()
 
       End Select   
     Case I_JMP
+      ' JMP A, B Jumps To A. 
+      'JMP moves execution to the address its A-field points to. The obvious but important difference to the "math" instructions is that JMP only cares about the address, not the data that address points to.
       
-    Case I_JMZ 
+    Case I_JMZ
+      ' JMZ A B If * B Is 0, jumps To A.
+      
     Case I_JMN 
     Case I_DJN 
     Case I_SPL 
@@ -2161,7 +2165,7 @@ Public Sub tbPause_Click()
 
 End
 
-Public Sub ed_Highlight(ed As Editor)
+Public Sub ed_Highlight()
   'Highlight the new line. Get's called each time there's a new line added to a editor text widget.
   'Code below is inspired/copied from the demo which ships with Gambas (GPL)
   'This code has not yet been tweaked to work with RedCode
@@ -2227,7 +2231,7 @@ End
 
 Public Sub ed1_Highlight()
 
-  ed_Highlight(ed1)
+  ed_Highlight
 
 End
 
@@ -2245,7 +2249,7 @@ End
 
 Public Sub ed2_Highlight()
 
-  ed_Highlight(ed2)
+  ed_Highlight
 
 End
 
